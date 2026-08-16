@@ -1,0 +1,31 @@
+# Generated artefacts — every script recreates its own directory with
+# mkdir(exist_ok=True), so nothing here needs to be published. The five
+# commands in README.md regenerate all of it from the two CSV exports.
+outputs/
+
+# SQLite cache of Open-Meteo responses. Rebuilt on first run; the
+# archive API is deterministic for past dates, so excluding it does not
+# affect reproducibility.
+data_cache/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Local environments and editor state
+venv/
+.venv/
+.idea/
+.vscode/
+.DS_Store
+
+# Windows / Google Drive folder metadata. Harmless in itself, but it
+# leaks a local install path, so it stays out of the artefact.
+desktop.ini
+Thumbs.db
+
+# Legacy figure module, superseded by the three regen_*.py scripts. It
+# produces none of the figures in the paper and still carries French
+# labels and sub-titles. Kept locally, out of the artefact. Its two
+# reusable pieces, COLORS and daily_aggregates, now live in common.py.
+analyze_display.py
