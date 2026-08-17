@@ -41,6 +41,7 @@ Run from this directory, in any order — each script is independent.
 | `python regen_heatmap.py` | `outputs/heatmap_calendaire_broken.png` | Fig. 2 |
 | `python regen_damping.py` | `outputs/amortissement_CEB.png`, `peak_lags.csv` | Fig. 3, Sec. IV-B |
 | `python pipeline_EDB_v2.py` | `outputs/v2_importance_features.png`, `resultats_v2_openmeteo.csv`, `resultats_par_fold.csv` | Fig. 4, Table III, Sec. IV-D and IV-E |
+| `python checks.py` | `outputs/gain_intervals.csv` | Sec. III-G and IV-D |
 
 `pipeline_EDB_v2.py` is the only one that needs the network on first
 run. It takes a few minutes: it fits quantile models at three quantiles,
@@ -71,6 +72,16 @@ printed by the same script.
 on each training fold, and the seasonal naive `y(t+h-24h)`. All three are
 scored on exactly the same walk-forward test folds as the model.
 
+**Validity checks.** `checks.py` verifies two properties rather than
+assuming them. It tests for temporal leakage by recomputing every
+feature on the series truncated at `t` and comparing it with the value
+obtained on the full series — all 36 features are identical, so none
+reads past `t`. It then attaches a 95 % interval to each reported gain
+by pooling per-sample absolute errors across the fold test sets and
+resampling model and baseline jointly (paired bootstrap, 2,000
+replicates). Three of the eight gains do not clear zero; the table in
+`gain_intervals.csv` flags which.
+
 **Excluded variables.** The node records five channels; two are dropped
 at load and never reach a feature set. The derived heat index correlates
 with the targets at r > 0.93, and the NH₃ air-quality index has no
@@ -94,6 +105,7 @@ consolidate_data.py    merge and deduplicate the exports
 openmeteo_fetch.py     ERA5-Land retrieval and validation
 completeness.py        data completeness audit
 pipeline_EDB_v2.py     features, models, walk-forward evaluation
+checks.py              leakage test and bootstrap intervals
 regen_pipeline.py      Fig. 1
 regen_heatmap.py       Fig. 2
 regen_damping.py       Fig. 3
