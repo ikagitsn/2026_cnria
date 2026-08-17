@@ -92,8 +92,9 @@ Permutation importance identifies the 6-hour rolling mean of exterior
 temperature as the dominant exogenous predictor, ${\approx}22\times$
 more important than the instantaneous exterior temperature, which
 measures the envelope's thermal memory directly from data. Exterior
-moisture variables, by contrast, carry no measurable weight, so this
-record yields no evidence of hygrothermal coupling. Code and data that
+moisture variables contribute little: ablation puts their combined
+worth at 3.4\,\% of MAE, far below what hygroscopic coupling would
+imply. Code and data that
 reproduce every table and figure are available at \repourl.
 \end{abstract}
 
@@ -711,17 +712,32 @@ practitioners the operational consequence is direct: a reduced-order
 model of such an envelope needs a multi-hour aggregate of outdoor
 temperature as an input, not the current reading.
 
-We also report a negative result, since it bears on a hypothesis that
-motivated the exogenous enrichment in the first place. Hygroscopic
-coupling in earthen walls would predict that outdoor moisture content
-helps forecast interior temperature, clay conductivity varying with
-moisture state~\cite{liuzzi2018}. It does not, here: exterior dew-point
-ranks 20th of 36 features with an importance of $-5\times10^{-6}$,
-statistically indistinguishable from zero, and none of the six
-Open-Meteo moisture or radiation variables carries measurable weight.
-The enrichment remains valuable for gap-filling $T_\text{ext}$
-(Section~\ref{ssec:era5}), but on this dataset it yields no evidence of
-hygrothermal coupling. Whether that reflects the physics or the limited
+Permutation importance is unreliable when predictors are correlated, so
+the ranking was checked two further ways. \textbf{Ablation}, which
+refits the model with a feature group removed, confirms the reading:
+dropping the single 6-hour rolling mean costs $+7.9\,\%$ MAE, more than
+dropping all fourteen Open-Meteo exogenous variables together
+($+6.3\,\%$). No other individual feature is that expensive. Removing
+the temporal cycles costs $+10.0\,\%$, consistent with the third rank of
+\texttt{hour\_sin}.
+
+\textbf{Within-regime} analysis addresses the concern that a variable
+separating the two measurement windows could rank high merely by acting
+as a season indicator. Recomputing the ranking inside each block leaves
+6-hour-scale exterior temperature dominant---in the rainy block the
+6-hour \emph{lag} of $T_\text{ext}$ leads by a factor of five over the
+next feature---so the memory result is not an artefact of the seasonal
+contrast.
+
+The same tests temper the negative result on moisture. Exterior
+dew-point ranks 20th of 36 in the pooled analysis, yet its rank
+\emph{improves} to 6th within the rainy block, which is the opposite of
+what a season proxy would do, and removing the five moisture variables
+costs $+3.4\,\%$ MAE. Their contribution is therefore small but not
+null. Hygroscopic coupling in earthen walls would predict a larger
+role, clay conductivity varying with moisture state~\cite{liuzzi2018};
+what these data support is a weak effect, not the strong one the
+hypothesis implies. Whether that reflects the physics or the limited
 support of the record---42~days at 37\,\% completeness, with the rainy
 season, when moisture effects would be strongest, covered at only
 24\,\%---cannot be settled here.
@@ -828,8 +844,8 @@ bootstrap intervals excluding zero. Permutation importance identifies the
 predictor---${\approx}22\times$ the instantaneous value---which measures
 the envelope's thermal memory directly from data and converges with the
 damping and lag obtained by physical analysis. Exterior moisture
-variables carry no measurable weight on this record, so the hygroscopic
-coupling hypothesis is not supported by the present data.
+variables contribute only marginally, so the hygroscopic coupling
+hypothesis is not supported at the strength it would predict.
 
 The pipeline is released at \repourl, with the raw exports and pinned
 dependencies, and is intentionally lightweight to serve as a foundation

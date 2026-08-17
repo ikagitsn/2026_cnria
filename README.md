@@ -42,6 +42,7 @@ Run from this directory, in any order — each script is independent.
 | `python regen_damping.py` | `outputs/amortissement_CEB.png`, `peak_lags.csv` | Fig. 3, Sec. IV-B |
 | `python pipeline_EDB_v2.py` | `outputs/v2_importance_features.png`, `resultats_v2_openmeteo.csv`, `resultats_par_fold.csv` | Fig. 4, Table III, Sec. IV-D and IV-E |
 | `python checks.py` | `outputs/gain_intervals.csv` | Sec. III-G and IV-D |
+| `python ablation.py` | `outputs/ablation.csv`, `within_regime.csv` | Sec. IV-E |
 
 `pipeline_EDB_v2.py` is the only one that needs the network on first
 run. It takes a few minutes: it fits quantile models at three quantiles,
@@ -95,6 +96,14 @@ resampling model and baseline jointly (paired bootstrap, 2,000
 replicates). Three of the eight gains do not clear zero; the table in
 `gain_intervals.csv` flags which.
 
+`ablation.py` adds two more, both aimed at the weakness of permutation
+importance under correlated predictors. It refits the model with each
+feature group removed — dropping the single 6-hour rolling mean of
+exterior temperature costs more accuracy than dropping all fourteen
+Open-Meteo exogenous variables — and recomputes the ranking separately
+inside the rainy and the dry block, so that a predictor which merely
+encodes the season cannot masquerade as an informative one.
+
 **Excluded variables.** The node records five channels; two are dropped
 at load and never reach a feature set. The derived heat index correlates
 with the targets at r > 0.93, and the NH₃ air-quality index has no
@@ -119,6 +128,7 @@ openmeteo_fetch.py     ERA5-Land retrieval and validation
 completeness.py        data completeness audit
 pipeline_EDB_v2.py     features, models, walk-forward evaluation
 checks.py              leakage test and bootstrap intervals
+ablation.py            feature ablation and within-regime ranking
 regen_pipeline.py      Fig. 1
 regen_heatmap.py       Fig. 2
 regen_damping.py       Fig. 3
