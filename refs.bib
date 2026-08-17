@@ -1,0 +1,233 @@
+%% refs.bib — CNRIA 2026 paper: IoT-to-ML hygrothermal CEB+Typha
+%% ================================================================
+%% No editorial annotations in printable fields: any working note
+%% must stay in a %% comment, never in a `note = {}` field, since
+%% BibTeX renders `note` in the formatted bibliography.
+%% ================================================================
+
+%% ----- I. Energy & climate context --------------------------------
+
+@techreport{gsr2025,
+  author      = {{UN Environment Programme} and
+                 {Global Alliance for Buildings and Construction}},
+  title       = {Global Status Report for Buildings and Construction
+                 2024/2025: Not just another brick in the wall ---
+                 the solutions exist, scaling them will build on
+                 progress and cut emissions fast},
+  institution = {UNEP and GlobalABC},
+  year        = {2025},
+  url         = {https://globalabc.org/resources/publications/global-status-report-buildings-and-construction-20242025-not-just-another}
+}
+
+%% Was an "article" entry with journal = "ASHRAE Standard", which
+%% renders poorly in IEEE style. A standard is a "manual" entry.
+%% Never write an at-sign in these comment lines: BibTeX has no comment
+%% syntax and scans for at-signs to find entries, so one here is read as
+%% the start of a new entry and raises the "was expecting an opening
+%% brace or parenthesis" error.
+@manual{ashrae55,
+  author       = {{ASHRAE}},
+  title        = {{ANSI/ASHRAE Standard 55-2020: Thermal Environmental
+                  Conditions for Human Occupancy}},
+  organization = {American Society of Heating, Refrigerating and
+                  Air-Conditioning Engineers},
+  address      = {Atlanta, GA, USA},
+  year         = {2020}
+}
+
+@techreport{iea2018cooling,
+  author      = {{International Energy Agency}},
+  title       = {The Future of Cooling: Opportunities for
+                 energy-efficient air conditioning},
+  institution = {IEA},
+  year        = {2018},
+  url         = {https://www.iea.org/reports/the-future-of-cooling}
+}
+
+%% ----- II. CEB / earthen construction -----------------------------
+
+@article{morel2001,
+  author  = {Morel, Jean-Claude and Mesbah, Ahmed and Oggero, Myriam
+             and Walker, Peter},
+  title   = {Building houses with local materials: means to drastically
+             reduce the environmental impact of construction},
+  journal = {Building and Environment},
+  volume  = {36},
+  number  = {10},
+  pages   = {1119--1126},
+  year    = {2001},
+  doi     = {10.1016/S0360-1323(00)00054-8}
+}
+
+@article{liuzzi2018,
+  author  = {Liuzzi, Stefania and Hall, Matthew R. and Stefanizzi, Pietro
+             and Casey, Stephen P.},
+  title   = {Hygrothermal behaviour and relative humidity buffering of
+             unfired and hydrated lime-stabilised clay composites in a
+             Mediterranean climate},
+  journal = {Building and Environment},
+  volume  = {61},
+  pages   = {82--92},
+  year    = {2013},
+  doi     = {10.1016/j.buildenv.2012.12.006}
+}
+
+@phdthesis{niang2018,
+  author  = {Niang, Ibrahim},
+  title   = {Contribution à la certification des bâtiments durables au
+             {S}énégal: cas d'étude des matériaux de construction
+             biosourcés à base de {T}ypha},
+  school  = {Université de Reims Champagne-Ardenne},
+  year    = {2018},
+  type    = {Thèse de doctorat, Sciences et Génie des Matériaux},
+  url     = {https://theses.fr/2018REIMS030}
+}
+
+%% ----- III. Open-Meteo / ERA5 ------------------------------------
+
+%% 10.5281/zenodo.7970649 is the concept DOI: it always resolves to the
+%% latest version, and DataCite currently stamps that record 2024, not
+%% 2023. Year set to 2024 to match what the DOI resolves to. If you
+%% prefer to pin the exact version used during the campaign, replace
+%% this with that version's own DOI and its year.
+%% IEEEtran.bst has no "software" entry type and falls back silently on
+%% one, so this is a "misc" entry: the publisher and DOI move into
+%% howpublished, which the style does render.
+@misc{zippenfenig2023,
+  author       = {Zippenfenig, Patrick},
+  title        = {{Open-Meteo.com Weather API}},
+  year         = {2024},
+  howpublished = {Zenodo, \url{https://doi.org/10.5281/zenodo.7970649}},
+  note         = {\url{https://open-meteo.com}}
+}
+
+@article{muñozsabater2021,
+  author  = {Muñoz-Sabater, Joaquín and Dutra, Emanuel and
+             Agustí-Panareda, Anna and others},
+  title   = {{ERA5-Land}: a state-of-the-art global reanalysis dataset
+             for land applications},
+  journal = {Earth System Science Data},
+  volume  = {13},
+  number  = {9},
+  pages   = {4349--4383},
+  year    = {2021},
+  doi     = {10.5194/essd-13-4349-2021}
+}
+
+%% ----- IV. ML for building thermal prediction --------------------
+
+@article{deb2017,
+  author  = {Deb, Chirag and Zhang, Fan and Yang, Junjing and
+             Lee, Siew Eang and Shah, Kwok Wei},
+  title   = {A review on time series forecasting techniques for building
+             energy consumption},
+  journal = {Renewable and Sustainable Energy Reviews},
+  volume  = {74},
+  pages   = {902--924},
+  year    = {2017},
+  doi     = {10.1016/j.rser.2017.02.085}
+}
+
+@article{li2021,
+  author  = {Li, Chengdong and Ding, Zixiang and Zhao, Dongbin and
+             Yi, Jianqiang and Zhang, Guiqing},
+  title   = {Building energy consumption prediction: an extreme deep
+             learning approach},
+  journal = {Energies},
+  volume  = {10},
+  number  = {10},
+  pages   = {1525},
+  year    = {2017},
+  doi     = {10.3390/en10101525}
+}
+
+@article{elsayed2021,
+  author  = {Elsayed, Shereen and Thyssens, Daniela and Rashed, Ahmed
+             and Jomaa, Hadi Samer and Schmidt-Thieme, Lars},
+  title   = {Do we really need deep learning models for time series
+             forecasting?},
+  journal = {arXiv preprint arXiv:2101.02118},
+  year    = {2021},
+  doi     = {10.48550/arXiv.2101.02118}
+}
+
+%% ----- V. Prior work (anonymised for double-blind) ---------------
+
+@inproceedings{ourpriorwork2021,
+  author    = {{Anonymous Authors}},
+  title     = {A {MQTT}-based {IoT} Module Applied to Chicken Poultry
+               Farm Monitoring},
+  booktitle = {Proceedings of an International Conference on ICT},
+  year      = {2021}
+}
+
+%% ----- VI. Earthen wall hygrothermal monitoring -------------------
+
+@inproceedings{soebarto2009,
+  author    = {Soebarto, Veronica},
+  title     = {Analysis of indoor performance of houses using rammed
+               earth walls},
+  booktitle = {Proc. 11th International IBPSA Conference
+               (Building Simulation 2009)},
+  address   = {Glasgow, Scotland},
+  pages     = {1530--1537},
+  year      = {2009},
+  url       = {https://publications.ibpsa.org/proceedings/bs/2009/papers/bs2009_1530_1537.pdf}
+}
+
+@article{soudani2017,
+  author  = {Soudani, Lucile and Woloszyn, Monika and Fabbri, Antonin
+             and Morel, Jean-Claude and Grillet, Anne-Cécile},
+  title   = {Energy evaluation of rammed earth walls using long term
+             in-situ measurements},
+  journal = {Solar Energy},
+  volume  = {141},
+  pages   = {70--80},
+  year    = {2017},
+  doi     = {10.1016/j.solener.2016.11.002}
+}
+
+@article{fabbri2014,
+  author  = {Fabbri, Antonin and Morel, Jean-Claude and Gallipoli, Domenico},
+  title   = {Assessing the performance of earth building materials: a review
+             of recent developments},
+  journal = {RILEM Technical Letters},
+  volume  = {3},
+  pages   = {46--58},
+  year    = {2018},
+  doi     = {10.21809/rilemtechlett.2018.71}
+}
+
+%% ----- VII. ML framework -----------------------------------------
+
+@article{pedregosa2011,
+  author  = {Pedregosa, Fabian and Varoquaux, Gaël and Gramfort, Alexandre
+             and others},
+  title   = {Scikit-learn: Machine learning in {Python}},
+  journal = {Journal of Machine Learning Research},
+  volume  = {12},
+  pages   = {2825--2830},
+  year    = {2011}
+}
+
+%% ----- VIII. Foundation models & conformal prediction -----------
+
+@article{ansari2024,
+  author  = {Ansari, Abdul Fatir and Stella, Lorenzo and Turkmen, Caner
+             and Zhang, Xiyuan and Mercado, Pedro and Shen, Huibin and
+             Shchur, Oleksandr and Rangapuram, Syama Sundar and
+             Pineda Arango, Sebastian and Kapoor, Shubham and others},
+  title   = {Chronos: Learning the language of time series},
+  journal = {arXiv preprint arXiv:2403.07815},
+  year    = {2024},
+  doi     = {10.48550/arXiv.2403.07815}
+}
+
+@article{angelopoulos2021,
+  author  = {Angelopoulos, Anastasios N. and Bates, Stephen},
+  title   = {A gentle introduction to conformal prediction and
+             distribution-free uncertainty quantification},
+  journal = {arXiv preprint arXiv:2107.07511},
+  year    = {2021},
+  doi     = {10.48550/arXiv.2107.07511}
+}

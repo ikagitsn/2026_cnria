@@ -48,6 +48,19 @@ run. It takes a few minutes: it fits quantile models at three quantiles,
 for two targets, across four horizons and four walk-forward folds, in
 both the level and the increment formulation.
 
+### Rebuilding the PDF
+
+`paper.tex` and `refs.bib` are included. Run the five commands above
+first, so that `outputs/` holds the four figures, then:
+
+```
+pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper && pdflatex paper
+```
+
+Four `pdflatex` passes are needed, not the usual three: `hyperref`
+requires one more before the citation labels settle. `\graphicspath`
+already looks inside `outputs/`, so no file needs moving.
+
 ### Headline numbers
 
 | Quantity | Value | Source |
@@ -111,6 +124,7 @@ regen_heatmap.py       Fig. 2
 regen_damping.py       Fig. 3
 common.py              shared palette and daily aggregation
 run_all.py             runs all of the above in order
+paper.tex, refs.bib    manuscript source
 outputs/               created on first run, not versioned
 ```
 

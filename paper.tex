@@ -1,0 +1,847 @@
+%% =====================================================================
+%% CNRIA 2026 — 16th Conference on Research in Computer Science
+%%              and its Applications, IEEE
+%%
+%% Title: End-to-end IoT-to-ML pipeline for hygrothermal
+%%        characterization and prediction of a vernacular
+%%        CEB+Typha building in a tropical-sahelian climate
+%%
+%% DOUBLE-BLIND SUBMISSION
+%%   - Author names are anonymized (use "Anonymous Authors")
+%%   - Do NOT include institution names, acknowledgments, or
+%%     self-identifying references before camera-ready
+%%   - Cite own prior work in third person: "as shown in [n]"
+%% =====================================================================
+
+\documentclass[conference]{IEEEtran}
+
+%% ---- Core packages -----------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}            % IEEE-style [1,2,3] citation grouping
+\usepackage{amsmath}
+\usepackage{graphicx}
+%% Figures are looked up in several places so the same source compiles
+%% locally (scripts write to ../01_python_scripts/outputs/) and on
+%% Overleaf (flat upload, or a figures/ subfolder).
+\graphicspath{{./}{figures/}{outputs/}{../01_python_scripts/outputs/}}
+\usepackage{booktabs}        % publication-quality tables (\toprule etc.)
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{microtype}       % improves line breaking
+\usepackage{xspace}          % smart spacing after macros
+
+%% hyperref should come LAST (except cleveref)
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={IoT-to-ML hygrothermal pipeline for CEB+Typha building},
+  pdfauthor={Anonymous Authors},
+}
+
+%% Break points let the URL wrap inside a narrow IEEE column.
+\def\UrlBreaks{\do\/\do\-\do\.\do\_}
+\Urlmuskip=0mu plus 1mu\relax
+\newcommand{\repourl}{\url{https://anonymous.4open.science/r/2026_cnria-1AD7/}}
+%% \EDB removed: it was never invoked, and expanded to a string that
+%% names the host institution.
+\newcommand{\ceb}{CEB+Typha\xspace}
+\newcommand{\sigrat}{$\sigma_\text{int}/\sigma_\text{ext}$\xspace}
+
+%% =====================================================================
+\begin{document}
+
+\title{End-to-end IoT-to-ML Pipeline for Hygrothermal Characterization
+  and Prediction of a Vernacular \ceb Building in a Tropical-Sahelian Climate}
+
+%% DOUBLE-BLIND: replace with author names for camera-ready
+\author{\IEEEauthorblockN{Anonymous Authors}
+\IEEEauthorblockA{\textit{Anonymous Institution}}}
+
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+% =====================================================================
+Vernacular earthen buildings represent a significant portion of the
+built stock in sub-Saharan Africa, yet their hygrothermal behavior under
+IoT monitoring remains largely unquantified. This paper presents an
+end-to-end open-source pipeline---from raw sensor data to probabilistic
+machine-learning predictions---applied to the Ecological and Digital
+Building (EDB) of a West African polytechnic school. The building
+envelope combines compressed-earth blocks (CEB) and \textit{typha}
+bio-based insulation. A total of 2,237 measurements at a nominal
+10-minute interval, collected over two windows in July--August and
+November--December 2025 spanning 41.8~days at 37\,\% completeness, are
+consolidated, enriched with ERA5 reanalysis data via the Open-Meteo API,
+and processed through six modular pipeline layers. Three convergent indicators quantify the
+envelope thermal inertia: a damping factor \sigrat of 0.54, a median
+peak-temperature lag of $+1.75$\,h between exterior and interior, and a
+52.5\,\% reduction in diurnal amplitude. Interior conditions satisfy the
+ASHRAE~55 tropical comfort zone 67\,\% of the time in the dry season
+versus only 17\,\% during the rainy season. A HistGradientBoosting
+quantile model predicting temperature increments from 36 engineered
+features---including CEB-aware lagged variables and Open-Meteo exogenous
+inputs---achieves a mean absolute error of 0.09\,\textdegree{}C at
+15\,min and 0.23\,\textdegree{}C at 1\,h, improving on persistence by 22.9\,\% (95\,\% CI [17.5, 27.8]) and
+47.7\,\% ([43.2, 51.7]) respectively, against a linear autoregressive
+and a seasonal naive baseline.
+Permutation importance identifies the 6-hour rolling mean of exterior
+temperature as the dominant exogenous predictor, ${\approx}22\times$
+more important than the instantaneous exterior temperature, which
+measures the envelope's thermal memory directly from data. Exterior
+moisture variables, by contrast, carry no measurable weight, so this
+record yields no evidence of hygrothermal coupling. Code and data that
+reproduce every table and figure are available at \repourl.
+\end{abstract}
+
+\begin{IEEEkeywords}
+IoT, hygrothermal monitoring, compressed earth blocks, typha insulation,
+machine learning, building thermal inertia, West Africa, smart building,
+time series prediction, ERA5
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+% =====================================================================
+
+The buildings and construction sector was responsible for 32\,\% of
+global final energy use and 34\,\% of energy-related CO$_2$ emissions
+in 2023~\cite{gsr2025}. Within that total, space cooling is the
+fastest-growing end-use in buildings and already accounts for about
+20\,\% of the electricity they consume~\cite{iea2018cooling}, a share
+driven by hot climates.
+In sub-Saharan Africa, vernacular
+construction techniques---particularly compressed-earth blocks
+(CEB) combined with locally harvested
+bio-based insulation materials---offer an energy-efficient, low-carbon
+alternative to imported cement-based construction, but remain
+under-instrumented and poorly characterized in the scientific
+literature~\cite{morel2001}.
+
+The emergence of low-cost IoT sensing platforms and the availability of
+high-quality open reanalysis datasets (ERA5 via Open-Meteo~\cite{zippenfenig2023})
+now make it feasible to monitor such buildings continuously and to
+complement sparse in-situ measurements with physically consistent
+exogenous variables at near-zero marginal cost. Yet, to the best of our
+knowledge, no published work has combined (i)~quantitative IoT-derived
+characterization of CEB thermal inertia, (ii)~probabilistic short-term
+prediction from heterogeneous sensor and reanalysis inputs, and
+(iii)~a fully reproducible open-source pipeline, for a vernacular earthen
+building in a West African tropical-sahelian climate.
+
+This paper fills this gap with three main contributions:
+
+\begin{enumerate}
+\item A \textbf{six-layer open-source pipeline} (consolidation,
+  Open-Meteo enrichment, preprocessing, CEB-aware feature engineering,
+  quantile gradient boosting, visualization) running end-to-end from
+  raw CSV sensor exports to publication-ready diagnostics and
+  probabilistic forecasts.
+
+\item A \textbf{quantitative thermal signature} of the \ceb envelope,
+  derived from 2,237 measurements and three convergent metrics
+  (damping ratio, peak lag, amplitude reduction). Instrumented
+  monitoring of compressed-earth buildings, and of typha demonstrators
+  in this region, has been reported before; what is documented here is
+  the dynamic response of this particular compound assembly, measured
+  at building scale rather than on material specimens.
+
+\item A \textbf{data-driven measurement of envelope thermal memory} via
+  machine-learning feature importance: the 6-hour rolling mean of
+  exterior temperature is the dominant exogenous predictor of interior
+  temperature at $h{+}1$\,h, ${\approx}22\times$ more important than the
+  instantaneous exterior temperature and ${\approx}23\times$ more than
+  its 1-hour mean. The envelope responds to an integral of outdoor
+  conditions over several hours rather than to instantaneous forcing---a
+  time constant recovered without physical supervision, converging with
+  the measured damping and lag.
+\end{enumerate}
+
+The case study is the Ecological and Digital Building (EDB)
+of a polytechnic school in Senegal,
+built with CEB walls and \textit{typha} insulation within the
+PNEEB-Typha programme---the Senegalese national programme for
+greenhouse-gas emission reduction through energy efficiency in the
+building sector, whose Typha component develops bio-based thermal
+insulation from the invasive reed \textit{Typha
+australis}~\cite{niang2018}. The site experiences
+two climatically contrasting regimes: a humid rainy season
+(June--October, RH 60--80\,\%) and a dry season with
+harmattan continental winds (November--May, RH 30--55\,\%, high diurnal
+amplitude).
+
+The remainder of this paper is organized as follows.
+Section~\ref{sec:related} reviews related work on earthen-building
+monitoring and data-driven thermal prediction.
+Section~\ref{sec:method} describes the instrumentation, data, and
+pipeline architecture. Section~\ref{sec:results} presents the
+hygrothermal characterization and prediction results.
+Section~\ref{sec:discussion} discusses the physical interpretation,
+limitations, and perspectives. Section~\ref{sec:conclusion} concludes.
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related}
+% =====================================================================
+
+
+\textbf{IoT monitoring of earthen and vernacular buildings.}
+Compressed-earth construction has been studied from a material science
+perspective for its thermal mass and hygroscopic
+properties~\cite{morel2001,liuzzi2018}, and wall-level hygrothermal
+transfer models exist for rammed earth~\cite{soudani2017}. However,
+continuous IoT monitoring of complete vernacular buildings at system
+level---capturing the coupled T/RH/air-quality dynamics under real
+occupancy and real climate---remains sparse, particularly in West Africa.
+Existing studies in the region focus either on static thermal
+characterization of individual CEB specimens~\cite{fabbri2014} or on
+qualitative surveys of indoor comfort without sensor data. The present
+work differs by providing a longitudinal IoT time series spanning two
+distinct seasonal regimes, enabling dynamic characterization of envelope
+performance from the building-scale response rather than material
+specimens.
+
+\textbf{Data-driven thermal prediction for buildings.}
+Machine learning has been extensively applied to building energy
+forecasting in commercial, well-instrumented settings, from classical
+time-series methods~\cite{deb2017} to deep architectures~\cite{li2021}.
+Depth is not always required: on windowed forecasting problems a
+properly engineered gradient-boosting model matches or outperforms
+state-of-the-art deep networks across nine datasets~\cite{elsayed2021},
+while remaining far cheaper to fit---which is what recommends it in the
+low-data regime studied here. Yet the vast majority
+of published models assume rich multi-zone sensor networks (10--100+
+sensors), continuous multi-year records, and climate zones with mild
+seasonal transitions. The low-data single-sensor regime---a single IoT
+node, two discontinuous measurement windows totaling 5 months, a
+single-building sample---is essentially unstudied for sub-Saharan earthen
+buildings. This regime is precisely the one that will prevail in most
+African research and practitioner contexts for the next decade.
+
+\textbf{ERA5 reanalysis as exogenous input.}
+Reanalysis products such as ERA5 and ERA5-Land~\cite{muñozsabater2021}
+provide physically consistent gridded reconstructions of past atmospheric
+conditions at 0.1\textdegree{} spatial resolution and hourly temporal
+resolution, freely accessible via the Open-Meteo
+API~\cite{zippenfenig2023}. Their use as exogenous model inputs has been
+demonstrated for solar forecasting and agricultural applications, but their
+systematic integration into building-scale thermal prediction
+pipelines---particularly for gap-filling missing local sensors and
+supplying dew-point, shortwave radiation, and wind speed features---has
+not, to our knowledge, been reported for vernacular African buildings. Our
+pipeline demonstrates that ERA5 enrichment is feasible (MAE vs.\ on-site
+sensor: ${\approx}1.0$--$1.5$\,\textdegree{}C, $r>0.9$) and that it
+enables a feature importance analysis otherwise impossible with a
+single-variable on-site measurement. It also lets that analysis return a
+negative verdict on the exogenous moisture variables
+(Section~\ref{ssec:importance}), which is itself informative.
+
+% =====================================================================
+\section{Materials and Methods}
+\label{sec:method}
+% =====================================================================
+
+\subsection{Study Site and Instrumentation}
+
+The Ecological and Digital Building (EDB) is a single-story
+demonstration building located on the campus of a polytechnic school in
+Senegal. Exact coordinates are withheld for double-blind review and will
+be released with the camera-ready version. Its envelope consists of
+load-bearing compressed-earth block
+(CEB) walls with \textit{typha} (\textit{Typha australis}) insulation
+panels, a construction system developed and tested in the national
+PNEEB-Typha programme~\cite{niang2018}. The site lies in the Sahelian
+transition zone, characterized by two sharply contrasting regimes: a rainy
+season (June--October, RH 60--80\,\%,
+$T$ 25--32\,\textdegree{}C) and a dry season with harmattan continental
+winds (November--May, RH 30--55\,\%, large diurnal amplitudes).
+
+Instrumentation comprises a single connected sensor node (identifier
+``node\_01'' in the released data) recording at a nominal 10-minute
+interval. Three of its channels are used here: interior air temperature
+$T_\text{int}$ (\textdegree{}C), interior relative humidity
+$\text{RH}_\text{int}$ (\%), and near-envelope exterior temperature
+$T_\text{ext}$ (\textdegree{}C). The node also logs an NH$_3$
+air-quality index and a derived heat index; neither enters this study,
+and both are dropped at load. All timestamps are in UTC.
+
+\subsection{Data Consolidation and Quality}
+
+Two CSV exports were provided: \texttt{sensor\_export\_1.csv} (2,237 rows) and
+\texttt{sensor\_export\_2.csv} (1,548 rows, confirmed as a strict subset).
+After deduplication on the \texttt{Date} field, the consolidated dataset
+contains 2,237 observations spanning 16~July to 4~December 2025. Two
+data quality issues were addressed. First, 391 $T_\text{ext}$ values are
+absent in July, attributed to delayed sensor deployment; these are filled
+by ERA5 reanalysis (Section~\ref{ssec:era5}). Second, the derived heat
+index correlates with $T_\text{int}$ and $\text{RH}_\text{int}$ at
+$r>0.93$; it is dropped at load rather than filtered later, so that it
+cannot reach any feature set. The dataset contains a 99-day gap
+(19~August--26~November 2025), separating the rainy-season window
+(July--August) from the dry-season window (November--December). This
+discontinuity motivates segment-aware preprocessing and precludes
+long-horizon cross-season modeling.
+
+\subsection{Data Completeness}
+\label{ssec:completeness}
+
+The record is substantially sparser than its calendar extent suggests,
+and Table~\ref{tab:completeness} states this explicitly. The two seasonal
+windows span 41.8~days in total, but 2,237 samples at a nominal
+10-minute interval amount to only 15.5~days of data, i.e.\ an overall
+completeness of 37.2\,\%. The two windows are moreover of very unequal
+quality. The dry-season window is a single uninterrupted 8.0-day block
+at 90.4\,\% completeness, whereas the rainy-season window is not a
+continuous window at all: it consists of 12 disjoint fragments totalling
+10.2~days of coverage inside a 33.8-day extent, at 24.4\,\%
+completeness. Exterior temperature is sparser still in that window
+(16.4\,\%), the 391 values missing in July being concentrated there.
+
+Two consequences follow, and we state them rather than qualify them.
+First, after resampling to the 15-minute modelling grid, only 41.2\,\%
+of the $T_\text{int}$ and $\text{RH}_\text{int}$ slots and 33.5\,\% of
+the $T_\text{ext}$ slots are backed by an actual sample; the remainder
+is interpolated or, for $T_\text{ext}$ in July, substituted from
+reanalysis. Second, the seasonal statistics of
+Section~\ref{sec:results}---including the comfort fractions---rest on
+these unequal supports, and sensor outages in the rainy season cannot be
+assumed missing at random. The dry-season figures characterise eight
+days at the very start of a November--May dry season, not the season as
+a whole, and the rainy-season figures rest on a fragmented quarter of
+their nominal window. All seasonal comparisons below should be read
+under this constraint.
+
+%% Generated by 01_python_scripts/completeness.py — regenerate rather
+%% than edit by hand; the script also writes outputs/completeness.csv.
+\begin{table}[!t]
+\centering
+\caption{Data completeness per variable and per seasonal window,
+  against the nominal 10-minute sampling interval.}
+\label{tab:completeness}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Rainy (16 Jul--19 Aug)}
+& \multicolumn{2}{c}{Dry (26 Nov--4 Dec)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Variable & $n$ & \% & $n$ & \% \\
+\midrule
+$T_\text{int}$              & 1{,}190 & 24.4 & 1{,}047 & 90.4 \\
+$\text{RH}_\text{int}$      & 1{,}190 & 24.4 & 1{,}047 & 90.4 \\
+$T_\text{ext}$              &     799 & 16.4 & 1{,}047 & 90.4 \\
+\midrule
+Window extent (days)   & \multicolumn{2}{c}{33.8} & \multicolumn{2}{c}{8.0} \\
+Contiguous fragments   & \multicolumn{2}{c}{12}   & \multicolumn{2}{c}{1}   \\
+Coverage (days)        & \multicolumn{2}{c}{10.2} & \multicolumn{2}{c}{8.0} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ERA5 Enrichment via Open-Meteo}
+\label{ssec:era5}
+
+Missing and supplementary meteorological variables are retrieved from the
+ERA5-Land reanalysis~\cite{muñozsabater2021} via the Open-Meteo Historical
+Archive API~\cite{zippenfenig2023}, using the official
+\texttt{openmeteo-requests} Python library (FlatBuffers protocol,
+persistent SQLite HTTP cache, automatic retry). Seven hourly variables are
+fetched at the EDB coordinates: $T_\text{2m}$, $\text{RH}_\text{2m}$,
+dew-point temperature, shortwave radiation, cloud cover, wind speed at
+10\,m, and precipitation. The ERA5 hourly series are linearly interpolated
+to the 15-minute pipeline time step and aligned to the sensor index.
+Validation against the available on-site $T_\text{ext}$ measurements
+yields MAE$\,{\approx}\,1.2$\,\textdegree{}C and Pearson $r>0.92$,
+consistent with published ERA5-Land accuracy in West
+Africa~\cite{muñozsabater2021}.
+
+\subsection{Pipeline Architecture}
+
+The processing pipeline is organized in six independent, testable layers
+(Fig.~\ref{fig:pipeline}), implemented as four Python scripts and a batch
+orchestrator. \textbf{L1 Ingestion} performs multi-file consolidation,
+schema validation, deduplication, and UTC normalization.
+\textbf{L2 Enrichment} fetches Open-Meteo data, validates against
+on-site measurements, and aligns to the sensor index.
+\textbf{L3 Preprocessing} resamples to 15\,min, segments seasonally
+(rainy vs.\ dry season), winsorises outliers, and
+interpolates contextual gaps. \textbf{L4 Feature engineering} produces
+36 predictors (Section~\ref{ssec:features}).
+\textbf{L5 Modeling} trains quantile gradient boosting and runs
+walk-forward validation (Section~\ref{ssec:model}).
+\textbf{L6 Visualization} generates multi-panel dashboards, calendar
+heatmaps, permutation importance plots, and an automated markdown
+diagnostic report. All scripts use fixed random seeds
+(\texttt{random\_state=42}), relative paths, and the \texttt{matplotlib}
+\texttt{Agg} backend for cross-platform headless rendering. The
+repository at \repourl contains the two raw sensor exports, the
+scripts, a pinned dependency list and a table mapping each command to
+the table or figure it produces; running the five commands it lists
+regenerates every quantitative result in this paper on Windows, macOS
+or Linux.
+
+\begin{figure*}[!t]
+  \centering
+  %% regen_pipeline.py → outputs/fig_pipeline.pdf (vector; a PNG
+  %% preview is written too, and pdflatex picks the PDF ahead of it)
+  \includegraphics[width=\textwidth]{fig_pipeline}
+  \caption{End-to-end pipeline architecture. Six independently testable
+    layers process the data from raw IoT sensor CSV to publication-ready
+    diagnostics. The dashed branch indicates the ERA5/Open-Meteo
+    Historical Archive API (L2) supplying both gap-filled exterior
+    temperature and six exogenous meteorological variables to the feature
+    engineering layer.}
+  \label{fig:pipeline}
+\end{figure*}
+
+\subsection{CEB-Aware Feature Engineering}
+\label{ssec:features}
+
+Thirty-six predictors are constructed, exploiting physical knowledge of
+the \ceb system. They include the current interior temperature and
+humidity $y(t)$: withholding them costs 11--27\,\% of accuracy at short
+horizons, since persistence has access to that value. Lagged exterior
+temperature values at
+$\Delta t \in \{15\,\text{min},\,1\,\text{h},\,2\,\text{h},\,6\,\text{h}\}$
+are deliberately calibrated around the empirically measured thermal lag
+(${\approx}1.75$\,h, Section~\ref{ssec:thermal}). Temporal cycles are
+encoded as $(\sin,\cos)$ pairs for hour-of-day and day-of-year,
+preserving continuity at midnight and year boundaries---critical for
+tree-based models. Rolling statistics (mean, standard deviation) of
+$T_\text{ext}$ over 1\,h and 6\,h windows capture the short memory of
+the envelope. Autoregressive lags of $T_\text{int}$ and
+$\text{RH}_\text{int}$ at
+$\Delta t \in \{15\,\text{min},\,1\,\text{h},\,24\,\text{h}\}$ anchor
+predictions to recent observed state. The six Open-Meteo exogenous
+variables (dew-point, shortwave radiation and its 1\,h rolling mean,
+humidity, cloud cover, wind) complete the feature set.
+
+\subsection{Model and Validation Strategy}
+\label{ssec:model}
+
+The forecasting model is a \texttt{HistGradientBoostingRegressor}
+(scikit-learn~\cite{pedregosa2011}), trained with quantile loss at
+$\alpha \in \{0.05,\,0.50,\,0.95\}$ to produce both point forecasts
+(median) and 90\,\% nominal prediction intervals. Hyperparameters are:
+400 estimators, learning rate 0.05, maximum depth~6. Three independent
+models per target variable per horizon are trained in parallel.
+
+Validation follows a strict walk-forward strategy:
+\texttt{TimeSeriesSplit} with $k=4$ expanding folds ensures no future
+information leaks into training. Four prediction horizons are evaluated
+independently: 15\,min, 1\,h, 6\,h, and 24\,h. The naive seasonal
+baseline is the same-time previous-day value:
+$\hat{y}(t) = y(t - 24\,\text{h})$, a strong baseline for smooth
+periodic signals. Feature importance is assessed by permutation on a
+held-out test set ($n=800$ samples), with 5 repeats per feature.
+
+Two properties of this setup were verified rather than assumed. First,
+the absence of temporal leakage: every feature at time $t$ was
+recomputed on the series truncated at $t$ and compared with its value on
+the full series. All 36 features are identical at every probe, so no
+feature reads past $t$; the lagged and rolling terms are trailing by
+construction, and the targets $y(t{+}h)$ lie strictly outside their
+support. Second, the uncertainty attached to each reported gain: with
+only four folds, a mean is a weak summary, so the per-sample absolute
+errors of the model and of each baseline are pooled across the fold test
+sets and resampled jointly (paired bootstrap, 2,000 replicates) to give
+a 95\,\% interval on the difference in MAE.
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+% =====================================================================
+
+\subsection{Hygrothermal Overview}
+
+Table~\ref{tab:stats} summarizes the seasonal statistics. The interior
+mean temperature is 29.6\,\textdegree{}C during the rainy season and
+26.7\,\textdegree{}C in the dry season, reflecting both the lower diurnal
+cycle amplitude in the dry season and the effective thermal buffering of
+the CEB mass. Interior RH drops sharply between seasons: 67.0\,\% on
+average during the rainy season against 45.9\,\% during the dry season.
+The calendar heatmap (Fig.~\ref{fig:heatmap}) visualizes the abrupt regime
+transition around late November, where cooler nights and significantly
+drier air replace the sustained warm-humid conditions of the rainy season.
+
+%% Generated by 01_python_scripts/completeness.py
+%% → outputs/seasonal_summary.tex
+\begin{table}[!t]
+\centering
+\caption{Summary statistics by seasonal regime}
+\label{tab:stats}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Regime     & $n$     & $T_\text{int}$ (\textdegree{}C)
+           & $\text{RH}_\text{int}$ (\%) & Comfort (\%) \\
+\midrule
+Global     & 2{,}237 & $28.2\pm2.6$ & $57.1\pm14.8$ & 40.5 \\
+Rainy      & 1{,}190 & $29.6\pm2.2$ & $67.0\pm7.9$  & 17.3 \\
+Dry season & 1{,}047 & $26.7\pm2.1$ & $45.9\pm12.7$ & 66.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[!t]
+  \centering
+  %% regen_heatmap.py → outputs/heatmap_calendaire_broken.png
+  %% (same script also writes a continuous-axis variant,
+  %%  heatmap_calendaire.png, legible but mostly empty)
+  \includegraphics[width=0.68\textwidth]{heatmap_calendaire_broken}
+  \caption{Calendar heatmap (hour$\,\times\,$day) of interior
+    temperature, exterior temperature, and interior RH\@. The axis is
+    broken at the 99-day interruption, marked on the facing edges: the
+    left block spans 16~July--19~August and the right block
+    26~November--4~December, drawn to a common daily scale with widths
+    proportional to their durations. Within each block the calendar is
+    complete, so shorter outages---such as 7--18~August---also appear at
+    true width, and grey marks days without data rather than a value on
+    the colour scale. Each row uses one colour scale across both blocks,
+    so the two seasons remain directly comparable. Coverage is 30 of
+    142~days for the interior variables and 22 for exterior temperature
+    (Section~\ref{ssec:completeness}). The rainy-to-dry transition is
+    visible as a simultaneous shift to cooler nights and lower humidity.}
+  \label{fig:heatmap}
+\end{figure*}
+
+\subsection{Thermal Signature of the CEB+Typha Envelope}
+\label{ssec:thermal}
+
+Three convergent metrics characterize the envelope's dynamic thermal
+behavior (Fig.~\ref{fig:thermal}). Damping is reported throughout as the
+ratio of standard deviations \sigrat $=0.54$, computed on the 1,846
+concurrent $(T_\text{int},T_\text{ext})$ samples: the interior standard
+deviation, 2.50\,\textdegree{}C, is 54\,\% of the exterior value of
+4.62\,\textdegree{}C. The median peak lag of $+1.75$\,h corresponds to the
+delay between daily $T_\text{ext}$ and $T_\text{int}$ maxima, computed
+on the 15-minute grid after a centred 1-hour rolling mean, over $n=9$
+days with at least 18\,h of data (interquartile range $+1.00$ to
+$+3.00$\,h, full range $+0.50$ to $+3.25$\,h). Peak picking on an
+hourly grid, as in an earlier version of this analysis, quantises every
+daily estimate to a whole hour and inflates the median to $+2.0$\,h; a
+cross-correlation estimate over the whole record independently returns
+$+1.75$\,h.
+
+The third metric is the reduction in diurnal amplitude: over the
+20~days with usable daily extrema, mean interior amplitude is
+5.19\,\textdegree{}C against 10.92\,\textdegree{}C outdoors, a ratio of
+0.48 and hence a 52.5\,\% reduction (Fig.~\ref{fig:thermal}, panel~c).
+The least-squares fit through the same points has a slope of 0.30 with a
+positive intercept of 1.88\,\textdegree{}C ($r=0.77$); it is shown for
+completeness but is not a damping measure, since the intercept absorbs
+part of the attenuation. Only \sigrat is used as the damping indicator
+in this paper.
+
+The all-season linear regression of interior on exterior temperature
+yields $T_\text{int} = 0.42\,T_\text{ext} + 16.6$, providing a compact
+empirical transfer function exploitable in simplified energy models.
+
+The observed lag of ${\approx}2$\,h is short compared with the values
+usually associated with massive earth walls, but the comparison is only
+meaningful at equal wall thickness: for rammed earth, reported time lags
+scale from 2.8\,h at 110\,mm to 6.2\,h at 220\,mm and 9.3\,h at
+330\,mm~\cite{soebarto2009,fabbri2014}. Two mechanisms are consistent
+with a lag of this order. The typha layer, being of low density and low
+conductivity, adds thermal resistance without storing energy and so
+shortens the transit time of the thermal wave; a moderate envelope
+thickness would produce a similar effect on its own. Separating the two
+requires envelope construction data (thickness, density, position of the
+typha layer) that the present campaign did not record, so the
+attribution to the typha layer is offered as a hypothesis rather than an
+established result.
+
+\begin{figure*}[!t]
+  \centering
+  %% Generated by 01_python_scripts/regen_damping.py
+  %% → outputs/amortissement_CEB.png
+  \includegraphics[width=0.78\textwidth]{amortissement_CEB}
+  \caption{Thermal signature of the \ceb envelope: (a) 7-day sample
+    showing visible delay and attenuation; (b) daily peak lag, median
+    $+1.75$\,h, computed on the 15-minute grid; (c) interior vs.\
+    exterior diurnal amplitude, annotated with the damping ratio
+    \sigrat $=0.54$. The least-squares line in (c) is shown for
+    completeness and is a different statistic from the damping ratio.}
+  \label{fig:thermal}
+\end{figure*}
+
+
+\subsection{Hygrothermal Comfort}
+
+Using the ASHRAE~55 tropical comfort zone adapted to naturally ventilated
+buildings (24--30\,\textdegree{}C, 30--70\,\% RH~\cite{ashrae55}),
+comfort time fractions differ sharply by season: 66.9\,\% in the dry
+window versus only 17.3\,\% in the rainy window. These two figures
+rest on very unequal supports---8~contiguous days at 90.4\,\%
+completeness against 12~fragments at 24.4\,\%
+(Section~\ref{ssec:completeness})---so they are reported as observed
+fractions over the available samples, not as season-wide estimates. In
+the dry window, mean $T_\text{int}=26.7$\,\textdegree{}C and
+RH$\,{\approx}\,46$\,\% place the measurements inside the comfort
+polygon. The rainy-season shortfall
+is driven primarily by humidity: mean $\text{RH}_\text{int}=67$\,\% sits
+just below the 70\,\% comfort ceiling, but frequent exceedances during
+precipitation events push measurements outside the zone. This highlights
+hygric management---natural cross-ventilation, vapor-permeable
+finishes---as the priority lever for rainy-season comfort, rather than
+thermal inertia alone.
+
+\subsection{Predictive Model Performance}
+
+\textbf{Baselines and scoring protocol.} A forecast at a 15-minute
+horizon must be measured against persistence, $\hat{y}(t{+}h) = y(t)$,
+which is the strong competitor on a smooth signal. We therefore report
+three baselines: persistence; a linear autoregressive model refitted on
+each training fold from the interior lags at 15\,min, 1\,h and 24\,h;
+and the seasonal naive predictor $\hat{y}(t{+}h) = y(t{+}h{-}24\,\text{h})$.
+All three are scored on exactly the same walk-forward test folds as the
+model, which is what makes the comparison meaningful.
+
+\textbf{Increment formulation.} The model predicts the increment
+$y(t{+}h) - y(t)$ and the level is reconstructed by adding $y(t)$; all
+metrics are computed on the reconstructed level. This matters more than
+any hyper-parameter. Regressing the level directly requires boosted
+trees to approximate the identity $y(t{+}h) \approx y(t)$ through
+piecewise-constant splits, and the residual of that approximation is
+coarser than the 0.12\,\textdegree{}C that separates two consecutive
+15-minute samples. Under the level formulation the model reaches only
+0.475\,\textdegree{}C MAE at 15\,min, five times worse than persistence;
+under the increment formulation it reaches 0.092\,\textdegree{}C, and
+persistence becomes the null prediction of zero that the model must beat.
+
+\textbf{Results.} Table~\ref{tab:results} reports the outcome. The model
+has the lowest MAE at seven of the eight horizon/target pairs, but the
+bootstrap intervals show that not all of those margins are resolved.
+Interior temperature carries the result: MAE 0.09\,\textdegree{}C at
+15\,min, a gain of $+22.9\,\%$ over persistence
+(95\,\% CI $[+17.5,\,+27.8]$); 0.23\,\textdegree{}C at 1\,h,
+$+47.7\,\%$ $[+43.2,\,+51.7]$; and 0.94\,\textdegree{}C at 6\,h,
+$+56.4\,\%$ $[+52.3,\,+60.3]$. All three intervals exclude zero by a
+wide margin.
+
+Humidity is a different matter. The gains over persistence are
+$+4.9\,\%$ at both 15\,min $[+0.7,\,+8.9]$ and 1\,h $[-0.4,\,+9.9]$:
+the first barely clears zero, the second does not clear it at all.
+Persistence is already close to the sensor's noise floor on
+$\text{RH}_\text{int}$, and on this record the model does not
+demonstrably improve on it at short horizons. At 6\,h the humidity gain
+becomes resolved again, $+12.1\,\%$ $[+5.8,\,+18.4]$.
+
+At 24\,h neither target is resolved in either direction: temperature
+loses $4.6\,\%$ to persistence with a CI of $[-10.6,\,+0.9]$ and
+humidity gains $2.8\,\%$ with $[-1.8,\,+7.3]$. Persistence and the
+seasonal baseline coincide at that horizon, since $y(t)$ and
+$y(t{+}h{-}24\,\text{h})$ are then the same value. The honest reading is
+that one day ahead the model and simple repetition are
+indistinguishable on this record; the 99-day interruption is the
+plausible cause, as no fold contains a continuous stretch long enough to
+learn a cross-season daily cycle.
+
+\textbf{Interval calibration.} Empirical coverage of the nominally
+90\,\% intervals is 77\,\% and 71\,\% at 15\,min, and 51\,\% and 58\,\%
+at 1\,h, degrading to 13--30\,\% at the longest horizons. The increment
+formulation improves coverage substantially---the level formulation gave
+26--42\,\% throughout---but the intervals remain over-confident. Post-hoc
+conformal calibration is therefore still required before any operational
+use (Section~\ref{sec:discussion}).
+
+Per-fold results vary considerably: on temperature at 15\,min the MAE
+across the four expanding folds ranges from 0.18 to 1.03\,\textdegree{}C
+under the level formulation. Folds that straddle the regime change are
+systematically the worst, which is a direct consequence of the
+discontinuity documented in Section~\ref{ssec:completeness} rather than
+of the estimator.
+
+%% Generated from 01_python_scripts/outputs/resultats_v2_openmeteo.csv
+%% (increment formulation). Per-fold values: outputs/resultats_par_fold.csv
+\begin{table}[!t]
+\centering
+\caption{Walk-forward validation over 4 expanding folds. All columns are
+  MAE on the reconstructed level, scored on identical test folds.
+  \textbf{Bold} = the model beats all three baselines.}
+\label{tab:results}
+\setlength{\tabcolsep}{4.2pt}
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+& & \multicolumn{1}{c}{Model} & \multicolumn{3}{c}{Baselines}
+  & \multicolumn{1}{c}{Cov.} \\
+\cmidrule(lr){3-3}\cmidrule(lr){4-6}\cmidrule(lr){7-7}
+Horizon & Target & MAE & Persist. & AR & Seas. & 90\,\% \\
+\midrule
+15\,min & T (\textdegree{}C) & \textbf{0.09} &  0.12 &  0.16 &  1.02 & 77\% \\
+15\,min & RH (\%)            & \textbf{0.65} &  0.67 &  1.29 & 11.06 & 71\% \\
+1\,h    & T (\textdegree{}C) & \textbf{0.23} &  0.44 &  0.36 &  1.03 & 51\% \\
+1\,h    & RH (\%)            & \textbf{2.25} &  2.36 &  3.30 & 11.34 & 58\% \\
+6\,h    & T (\textdegree{}C) & \textbf{0.94} &  2.16 &  1.98 &  1.01 & 36\% \\
+6\,h    & RH (\%)            & \textbf{9.00} & 10.25 & 17.93 & 12.32 & 30\% \\
+24\,h   & T (\textdegree{}C) &         1.05  &  0.99 &  1.08 &  0.99 & 13\% \\
+24\,h   & RH (\%)            & \textbf{13.76}& 14.20 & 15.36 & 14.20 & 23\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Feature Importance: Envelope Thermal Memory}
+\label{ssec:importance}
+
+Permutation importance on the $T_\text{int}$ model at $h{+}1$\,h
+(Fig.~\ref{fig:importance}, $n=800$ held-out samples, 5 repeats)
+separates the predictors sharply. Two variables dominate: the interior
+autoregressive lag at 15\,min ($0.394 \pm 0.035$ decrease in $R^2$) and
+the \emph{6-hour rolling mean} of exterior temperature
+($0.364 \pm 0.035$). No other feature reaches a tenth of these values;
+the third, the hour-of-day sine encoding, contributes $0.076$.
+
+The informative comparison is within the exterior-temperature family
+itself. Instantaneous $T_\text{ext}$ ranks fifth at $0.017$, and the
+1-hour rolling mean seventh at $0.016$: the 6-hour mean is
+${\approx}22\times$ more important than the instantaneous value and
+${\approx}23\times$ more than the 1-hour mean. Point lags of
+$T_\text{ext}$ at 1\,h and 2\,h carry no positive importance at all.
+The model therefore does not respond to outdoor temperature at any
+single past instant, but to its integral over roughly six hours.
+
+This is a data-driven measurement of the envelope's thermal memory, and
+it converges with the two physical indicators of
+Section~\ref{ssec:thermal}: a damping ratio of 0.54 and a peak lag of
+$+1.75$\,h both describe a wall that low-pass filters the outdoor
+signal. The importance ranking puts a time constant on that filter, at a
+scale of several hours, obtained without any physical supervision. For
+practitioners the operational consequence is direct: a reduced-order
+model of such an envelope needs a multi-hour aggregate of outdoor
+temperature as an input, not the current reading.
+
+We also report a negative result, since it bears on a hypothesis that
+motivated the exogenous enrichment in the first place. Hygroscopic
+coupling in earthen walls would predict that outdoor moisture content
+helps forecast interior temperature, clay conductivity varying with
+moisture state~\cite{liuzzi2018}. It does not, here: exterior dew-point
+ranks 20th of 36 features with an importance of $-5\times10^{-6}$,
+statistically indistinguishable from zero, and none of the six
+Open-Meteo moisture or radiation variables carries measurable weight.
+The enrichment remains valuable for gap-filling $T_\text{ext}$
+(Section~\ref{ssec:era5}), but on this dataset it yields no evidence of
+hygrothermal coupling. Whether that reflects the physics or the limited
+support of the record---42~days at 37\,\% completeness, with the rainy
+season, when moisture effects would be strongest, covered at only
+24\,\%---cannot be settled here.
+
+\begin{figure*}[!t]
+  \centering
+  %% Generated by pipeline_EDB_v2.py → outputs/v2_importance_features.png
+  \includegraphics[width=0.72\textwidth]{v2_importance_features}
+  \caption{Permutation importance (top-15 of 36 features) for
+    $T_\text{int}$ at $h{+}1$\,h, as the decrease in $R^2$ over 5
+    repeats on 800 held-out samples; bars show the standard deviation.
+    Colours: red = autoregressive; purple = exterior temperature;
+    green = Open-Meteo exogenous; orange = temporal cycles. The 6-hour
+    rolling mean of exterior temperature (rank~2) is
+    ${\approx}22\times$ more important than the instantaneous value
+    (rank~5), which is the signature of the envelope's multi-hour
+    thermal memory. Open-Meteo moisture and radiation variables sit at
+    the bottom of the ranking; exterior dew-point, not shown, ranks
+    20th of 36.}
+  \label{fig:importance}
+\end{figure*}
+
+% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+% =====================================================================
+
+\textbf{Physical interpretation of the thermal signature.}
+The measured damping ratio of 0.54 falls within the range reported in the
+literature for compressed earth blocks (typically 0.5--0.7 depending on
+wall thickness and density~\cite{liuzzi2018,fabbri2014}), confirming that
+the CEB mass provides effective amplitude attenuation. The peak lag of
+$+1.75$\,h is at the low end of the values reported for earth walls,
+which range from under 3\,h for thin sections to above 9\,h for
+sections of 330\,mm and beyond~\cite{soebarto2009,soudani2017}. One
+reading is that the typha layer, as a low-density, low-conductivity,
+low-mass material, reduces the transit time of the thermal wave without
+storing energy, so that the assembly behaves as a hybrid of resistive
+(typha) and capacitive (CEB) layers---a regime that classical
+lumped-capacity earth models do not capture. A thin envelope would,
+however, yield a comparable lag without any resistive layer, and the
+present data cannot separate the two. Establishing the hybrid
+interpretation requires the envelope build-up and a wall-surface or
+interstitial measurement, neither of which was available here. What the
+campaign does contribute is a building-scale record of this specific
+compound assembly, which we have not found reported elsewhere.
+
+\textbf{Long-horizon performance ceiling.}
+The model beats all three baselines up to 6\,h but loses to persistence
+on temperature at 24\,h (Table~\ref{tab:results}). This does not indicate
+a failure of the model class but a structural limitation of the data: the
+99-day gap between the rainy and dry seasons means no training fold
+contains a continuous stretch long enough to learn a cross-season daily
+cycle, so simple repetition is hard to beat one day ahead. A continuous
+campaign of $\geq$6 months across at least one full seasonal transition
+is the single most impactful improvement to lift this ceiling. Pre-trained
+time-series foundation models (Chronos-T5~\cite{ansari2024}, Lag-Llama,
+TimesFM) deployed in zero-shot are an alternative direction once denser
+data becomes available.
+
+\textbf{Calibration of prediction intervals.}
+Empirical coverage of the 90\,\% nominal intervals reaches 71--77\,\% at
+15\,min but falls to 13--30\,\% at 24\,h. Part of the deficit was an
+artefact of predicting the level rather than the increment, which alone
+cost some 30 percentage points of coverage at short horizons; what
+remains is the well-known over-confidence of quantile gradient boosting
+on small datasets. Conformal prediction~\cite{angelopoulos2021} provides
+a finite-sample-guaranteed correction without retraining: the MAPIE
+library implements it as a drop-in calibration layer. Adding this is the
+priority extension and a prerequisite to any operational deployment.
+
+
+\textbf{Generalizability and limitations.}
+The pipeline runs unchanged on Windows, macOS, and Linux, requires only
+freely available data (sensor CSV + Open-Meteo), and is directly
+applicable to any earthen or vernacular building equipped with a single
+connected sensor and located within ERA5 coverage---essentially the
+entire African continent. The main limitations are (i)~the single-sensor
+setup, which precludes characterization of intra-building thermal
+gradients; (ii)~the temporal discontinuity discussed above; and
+(iii)~the absence of heat-flux and air-velocity measurements, which
+prevents separation of conductive, convective, and radiative
+contributions to the energy balance. A second instrumentation campaign
+addressing these three points constitutes the direct continuation of
+this work.
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% =====================================================================
+
+This paper presented an end-to-end open-source pipeline for the
+hygrothermal characterization and probabilistic prediction of a vernacular
+\ceb building in a tropical-sahelian climate. From 2,237 IoT measurements
+enriched with ERA5 reanalysis, three convergent indicators quantify the
+envelope thermal inertia---damping ratio \sigrat $=0.54$, median peak
+lag $+1.75$\,h, diurnal amplitude reduction 52.5\,\%---an empirical
+signature of this specific compound assembly at building scale. A
+HistGradientBoosting quantile model predicting increments achieves
+0.09\,\textdegree{}C MAE at 15\,min and 0.23\,\textdegree{}C at 1\,h,
+improving on persistence by 22.9\,\% and 47.7\,\% respectively, with
+bootstrap intervals excluding zero. Permutation importance identifies the
+6-hour rolling mean of exterior temperature as the dominant exogenous
+predictor---${\approx}22\times$ the instantaneous value---which measures
+the envelope's thermal memory directly from data and converges with the
+damping and lag obtained by physical analysis. Exterior moisture
+variables carry no measurable weight on this record, so the hygroscopic
+coupling hypothesis is not supported by the present data.
+
+The pipeline is released at \repourl, with the raw exports and pinned
+dependencies, and is intentionally lightweight to serve as a foundation
+for African research institutions instrumenting their own vernacular
+buildings. The next steps---conformal calibration, multi-zone
+instrumentation, BIM/ontology integration---define a clear roadmap toward
+a deployable digital twin of the EDB, and more broadly toward a
+standardized data-driven characterization of African earthen construction.
+
+
+% =====================================================================
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
