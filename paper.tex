@@ -6,14 +6,18 @@
 %%        characterization and prediction of a vernacular
 %%        CEB+Typha building in a tropical-sahelian climate
 %%
-%% DOUBLE-BLIND SUBMISSION
-%%   - Author names are anonymized (use "Anonymous Authors")
-%%   - Do NOT include institution names, acknowledgments, or
-%%     self-identifying references before camera-ready
-%%   - Cite own prior work in third person: "as shown in [n]"
+%% CAMERA-READY VERSION, EasyChair submission 37
+%%   - Final PDF due 17 September 2026 via EasyChair (proceedings
+%%     author role); strict limit of 8 pages
+%%   - Check the PDF with IEEE PDF eXpress before uploading
+%%   - Built from 00_paper/paper.tex (revision of 8 September 2026)
+%%     with the double-blind anonymisation lifted
 %% =====================================================================
 
 \documentclass[conference]{IEEEtran}
+%% Uncomment together with \IEEEpubid below if the organisers ask for
+%% the IEEE copyright line on page 1.
+% \IEEEoverridecommandlockouts
 
 %% ---- Core packages -----------------------------------------------
 \usepackage[T1]{fontenc}
@@ -37,16 +41,19 @@
   linkcolor=black,
   citecolor=black,
   urlcolor=blue,
-  pdftitle={IoT-to-ML hygrothermal pipeline for CEB+Typha building},
-  pdfauthor={Anonymous Authors},
+  pdftitle={End-to-end IoT-to-ML Pipeline for Hygrothermal Characterization
+    and Prediction of a Vernacular CEB+Typha Building in a
+    Tropical-Sahelian Climate},
+  pdfauthor={Ibrahima Ka, Ibrahima Gueye, El Hadji Boubacar Seck,
+    Mouhamadou Thiam, Serigne Mansour Diene},
 }
 
 %% Break points let the URL wrap inside a narrow IEEE column.
 \def\UrlBreaks{\do\/\do\-\do\.\do\_}
 \Urlmuskip=0mu plus 1mu\relax
-\newcommand{\repourl}{\url{https://anonymous.4open.science/r/2026_cnria-1AD7/}}
-%% \EDB removed: it was never invoked, and expanded to a string that
-%% names the host institution.
+%% Public repository, printed in the abstract, Section III-D and the
+%% conclusion.
+\newcommand{\repourl}{\url{https://github.com/ikagitsn/2026_cnria}}
 \newcommand{\ceb}{CEB+Typha\xspace}
 \newcommand{\sigrat}{$\sigma_\text{int}/\sigma_\text{ext}$\xspace}
 
@@ -56,9 +63,17 @@
 \title{End-to-end IoT-to-ML Pipeline for Hygrothermal Characterization
   and Prediction of a Vernacular \ceb Building in a Tropical-Sahelian Climate}
 
-%% DOUBLE-BLIND: replace with author names for camera-ready
-\author{\IEEEauthorblockN{Anonymous Authors}
-\IEEEauthorblockA{\textit{Anonymous Institution}}}
+\author{\IEEEauthorblockN{Ibrahima Ka, Ibrahima Gueye, El Hadji Boubacar Seck,
+  Mouhamadou Thiam and Serigne Mansour Diene}
+\IEEEauthorblockA{\textit{École Polytechnique de Thiès}, Thiès, Senegal\\
+  \{ika, igueye, bseck, mthiam, smdiene\}@ept.edu.sn}}
+
+%% IEEE copyright line for the foot of page 1, only if the organisers
+%% send the exact string (ISBN and price code). Needs
+%% \IEEEoverridecommandlockouts above and \IEEEpubidadjcol at the top of
+%% the second column of page 1.
+% \IEEEpubid{\makebox[\columnwidth]{979-8-XXXX-XXXX-X/26/\$31.00~\copyright2026 IEEE\hfill}%
+%   \hspace{\columnsep}\makebox[\columnwidth]{}}
 
 \maketitle
 
@@ -70,7 +85,7 @@ built stock in sub-Saharan Africa, yet their hygrothermal behavior under
 IoT monitoring remains largely unquantified. This paper presents an
 end-to-end open-source pipeline, from raw sensor data to probabilistic
 machine-learning predictions, applied to the Ecological and Digital
-Building (EDB) of a West African polytechnic school. The building
+Building (EDB) of the École Polytechnique de Thiès, Senegal. The building
 envelope combines compressed-earth blocks (CEB) and \textit{typha}
 bio-based insulation. A total of 2,237 measurements at a nominal
 10-minute interval, collected over two windows in July--August and
@@ -88,10 +103,11 @@ inputs, achieves a mean absolute error of 0.09\,\textdegree{}C at
 15\,min and 0.23\,\textdegree{}C at 1\,h, improving on persistence by 22.9\,\% (95\,\% CI [17.5, 27.8]) and
 47.7\,\% ([43.2, 51.7]) respectively, against a linear autoregressive
 and a seasonal naive baseline.
-Permutation importance identifies the 6-hour rolling mean of exterior
-temperature as the dominant exogenous predictor, ${\approx}22\times$
-more important than the instantaneous exterior temperature, which
-measures the envelope's thermal memory directly from data. Exterior
+Averaged over the walk-forward test folds, permutation importance is
+led by the hour-of-day cycle and places exterior temperature six hours
+earlier first among exterior predictors; removing the 6-hour rolling
+mean of exterior temperature costs 7.9\,\% of MAE, consistent with a
+thermal memory of several hours. Exterior
 moisture variables contribute little: ablation puts their combined
 worth at 3.4\,\% of MAE, far below what hygroscopic coupling would
 imply. Code and data that
@@ -142,17 +158,17 @@ The paper makes three contributions:
   peak lag, amplitude reduction), measured at building scale rather
   than on material specimens.
 
-\item A \textit{data-driven measurement of envelope thermal memory} via
-  feature importance: the 6-hour rolling mean of exterior temperature
-  is the dominant exogenous predictor of interior temperature at
-  $h{+}1$\,h, ${\approx}22\times$ more important than the instantaneous
-  value. The envelope responds to an integral of outdoor conditions
-  over several hours, a time constant recovered without physical
-  supervision.
+\item A \textit{data-driven indication of envelope thermal memory} from
+  feature importance and ablation: at $h{+}1$\,h, exterior temperature
+  six hours earlier is the leading exterior predictor of interior
+  temperature and the first predictor of all in the rainy season, and
+  removing the 6-hour rolling mean of exterior temperature costs
+  $+7.9\,\%$ MAE. The envelope responds to outdoor conditions over
+  several hours, a time scale recovered without physical supervision.
 \end{enumerate}
 
-The case study is the Ecological and Digital Building (EDB) of a
-polytechnic school in Senegal, built with CEB walls and \textit{typha}
+The case study is the Ecological and Digital Building (EDB) of the
+École Polytechnique de Thiès in Senegal, built with CEB walls and \textit{typha}
 insulation under PNEEB-Typha, the Senegalese national programme for
 energy efficiency in buildings, whose Typha component develops
 bio-based insulation from the invasive reed \textit{Typha
@@ -209,11 +225,39 @@ including its negative verdict on exogenous moisture
 \label{sec:method}
 % =====================================================================
 
+%% Both architecture figures are defined here so that they float to the
+%% top of the next page, close to Sections III-A and III-D. Keep the
+%% acquisition schematic first: its pipeline box cites Fig. 2.
+\begin{figure*}[!t]
+  \centering
+  %% Generated by 01_python_scripts/regen_acquisition.py
+  %% -> outputs/fig_acquisition.pdf
+  \includegraphics[width=\textwidth]{fig_acquisition}
+  \caption{Acquisition chain of the monitoring campaign: from the sensor
+    node in the EDB, through AWS IoT Core, a Lambda function and
+    DynamoDB, to the CSV exports that enter the pipeline of
+    Fig.~\ref{fig:pipeline}.}
+  \label{fig:hardware}
+\end{figure*}
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{fig_pipeline}
+  \caption{End-to-end pipeline architecture. Six independently testable
+    layers process the data from raw IoT sensor CSV to publication-ready
+    diagnostics. The dashed branch is the ERA5/Open-Meteo Historical
+    Archive API, which enters at L2: it gap-fills exterior temperature
+    and supplies the six exogenous meteorological variables that L4 then
+    turns into features.}
+  \label{fig:pipeline}
+\end{figure*}
+
 \subsection{Study Site and Instrumentation}
 
 The Ecological and Digital Building (EDB) is a single-story
-demonstration building located on the campus of a polytechnic school in
-Senegal. Exact coordinates are withheld for double-blind review. Its
+demonstration building located on the campus of the École Polytechnique de Thiès,
+Senegal (14.7957\textdegree{}N, 16.9674\textdegree{}W, 87\,m above sea
+level). Its
 footprint is $13.12 \times 14.10$\,m (about 185\,m$^2$), with a clear
 height of 2.75\,m.
 
@@ -250,11 +294,13 @@ comparison is indicative. And $T_\text{ext}$, partly coupled to the
 wall it sits beside, is a near-envelope rather than a free-field
 temperature, so \sigrat compares that quantity with the interior.
 
-Both sensors are read by an Arduino Nano 33 IoT, which pushes each
-timestamped sample over Wi-Fi to a DynamoDB table on AWS; the CSV
-exports analysed here are dumps of that table. There is no local
-buffering, so an interruption costs a sample outright, and availability
-is reported as completeness (Table~\ref{tab:stats}).
+Both sensors are read by an Arduino Nano 33 IoT (Fig.~\ref{fig:hardware}), which computes a heat
+index on board and publishes each timestamped sample as JSON over Wi-Fi
+to AWS IoT Core using MQTT over TLS; a rule forwards the message to a
+Lambda function that writes it to a DynamoDB table, and the CSV exports
+analysed here are dumps of that table. There is no local buffering, so
+an interruption costs a sample outright, and availability is reported
+as completeness (Table~\ref{tab:stats}).
 
 \subsection{Data Consolidation and Completeness}
 \label{ssec:completeness}
@@ -330,25 +376,13 @@ with published ERA5-Land accuracy in West Africa.
 \subsection{Pipeline Architecture}
 
 The pipeline is organized in six independent, testable layers
-(Fig.~\ref{fig:pipeline}), implemented as four Python scripts and a
+(Fig.~\ref{fig:pipeline}), implemented as Python scripts and a
 batch orchestrator with fixed random seeds
-(\texttt{random\_state=42}). The repository at \repourl contains the
+(\texttt{random\_state=42}). The repository at \repourl{} contains the
 two raw sensor exports, the scripts, a pinned dependency list and a
-table mapping each command to the table or figure it produces; the five
+table mapping each command to the table or figure it produces; the eight
 commands it lists regenerate every quantitative result in this paper on
 Windows, macOS or Linux.
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{fig_pipeline}
-  \caption{End-to-end pipeline architecture. Six independently testable
-    layers process the data from raw IoT sensor CSV to publication-ready
-    diagnostics. The dashed branch is the ERA5/Open-Meteo Historical
-    Archive API, which enters at L2: it gap-fills exterior temperature
-    and supplies the six exogenous meteorological variables that L4 then
-    turns into features.}
-  \label{fig:pipeline}
-\end{figure*}
 
 \subsection{CEB-Aware Feature Engineering}
 \label{ssec:features}
@@ -370,7 +404,7 @@ complete the set.
 \subsection{Model and Validation Strategy}
 \label{ssec:model}
 
-The forecasting model is a \texttt{HistGradientBoostingRegressor}
+The forecasting model is a \texttt{HistGradientBoosting\allowbreak Regressor}
 (scikit-learn~\cite{pedregosa2011}), trained with quantile loss at
 $\alpha \in \{0.05,\,0.50,\,0.95\}$ to produce point forecasts (median)
 and 90\,\% nominal prediction intervals, with 400 estimators, learning
@@ -378,8 +412,8 @@ rate 0.05 and maximum depth~6. Validation follows a walk-forward
 strategy: \texttt{TimeSeriesSplit} with $k=4$ expanding folds ensures
 no future information leaks into training, and four horizons are
 evaluated independently (15\,min, 1\,h, 6\,h, 24\,h). Feature
-importance is assessed by permutation on a held-out test set ($n=800$),
-with 5 repeats per feature.
+importance is assessed by permutation on each walk-forward test fold
+($n=189$ at $h{+}1$\,h), with 5 repeats per feature.
 
 Two properties were verified. First, the absence of temporal leakage:
 every feature at time $t$, recomputed on the series truncated at $t$,
@@ -511,8 +545,8 @@ metrics are computed on the reconstructed level. Regressing the level
 directly requires boosted trees to approximate $y(t{+}h) \approx y(t)$
 through piecewise-constant splits, whose residual is coarser than the
 0.12\,\textdegree{}C separating two consecutive samples: the level
-formulation reaches only 0.475\,\textdegree{}C MAE at 15\,min against
-0.092\,\textdegree{}C for the increment.
+formulation reaches only 0.477\,\textdegree{}C MAE at 15\,min against
+0.094\,\textdegree{}C for the increment.
 
 \textit{Results.} Table~\ref{tab:results} reports the outcome. The
 model has the lowest MAE at seven of the eight horizon/target pairs,
@@ -532,20 +566,21 @@ repetition are indistinguishable on this record, the 99-day
 interruption being the plausible cause.
 
 \textit{Interval calibration.} Empirical coverage of the nominally
-90\,\% intervals is 77\,\% and 71\,\% at 15\,min, 51\,\% and 58\,\% at
-1\,h, degrading to 13--30\,\% at 24\,h. The increment formulation
-improves coverage by some 30 percentage points at short horizons (the
-level formulation gave 26--42\,\% throughout); what remains is the
+90\,\% intervals is 76\,\% and 70\,\% at 15\,min, 49\,\% and 55\,\% at
+1\,h, degrading to 16--22\,\% at 24\,h. The increment formulation
+improves coverage by 13 to 43 percentage points at 15\,min and 1\,h (the
+level formulation gave 18--44\,\% throughout); what remains is the
 known over-confidence of quantile gradient boosting on small datasets.
 Conformal prediction~\cite{angelopoulos2021}, implemented as a drop-in
 layer by the MAPIE library, is the priority extension and a
 prerequisite to any operational use.
 
 Per-fold results vary widely: on temperature at 15\,min the MAE
-across the four expanding folds ranges from 0.18 to 1.03\,\textdegree{}C
-under the level formulation. Folds that straddle the regime change are
-systematically the worst, a direct consequence of the discontinuity
-documented in Section~\ref{ssec:completeness}.
+across the four expanding folds ranges from 0.12 to 0.93\,\textdegree{}C
+under the level formulation. The worst fold is the first one tested
+entirely in the dry season, after training almost only on rainy-season
+data, which points to the discontinuity documented in
+Section~\ref{ssec:completeness}.
 
 %% Generated from 01_python_scripts/outputs/resultats_v2_openmeteo.csv
 %% (increment formulation). Per-fold values: outputs/resultats_par_fold.csv
@@ -563,14 +598,14 @@ documented in Section~\ref{ssec:completeness}.
 \cmidrule(lr){3-3}\cmidrule(lr){4-6}\cmidrule(lr){7-7}
 Horizon & Target & MAE & Persist. & AR & Seas. & 90\,\% \\
 \midrule
-15\,min & T (\textdegree{}C) & \textit{0.09} &  0.12 &  0.16 &  1.02 & 77\% \\
-15\,min & RH (\%)            & \textit{0.65} &  0.67 &  1.29 & 11.06 & 71\% \\
-1\,h    & T (\textdegree{}C) & \textit{0.23} &  0.44 &  0.36 &  1.03 & 51\% \\
-1\,h    & RH (\%)            & \textit{2.25} &  2.36 &  3.30 & 11.34 & 58\% \\
+15\,min & T (\textdegree{}C) & \textit{0.09} &  0.12 &  0.15 &  1.02 & 76\% \\
+15\,min & RH (\%)            & \textit{0.64} &  0.67 &  1.29 & 11.06 & 70\% \\
+1\,h    & T (\textdegree{}C) & \textit{0.23} &  0.44 &  0.36 &  1.03 & 49\% \\
+1\,h    & RH (\%)            & \textit{2.24} &  2.36 &  3.30 & 11.34 & 55\% \\
 6\,h    & T (\textdegree{}C) & \textit{0.94} &  2.16 &  1.98 &  1.01 & 36\% \\
-6\,h    & RH (\%)            & \textit{9.00} & 10.25 & 17.93 & 12.32 & 30\% \\
-24\,h   & T (\textdegree{}C) &         1.05  &  0.99 &  1.08 &  0.99 & 13\% \\
-24\,h   & RH (\%)            & \textit{13.76}& 14.20 & 15.36 & 14.20 & 23\% \\
+6\,h    & RH (\%)            & \textit{9.01} & 10.25 & 17.93 & 12.32 & 30\% \\
+24\,h   & T (\textdegree{}C) &          1.03 &  0.99 &  1.08 &  0.99 & 16\% \\
+24\,h   & RH (\%)            & \textit{13.80} & 14.20 & 15.36 & 14.20 & 22\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -578,43 +613,51 @@ Horizon & Target & MAE & Persist. & AR & Seas. & 90\,\% \\
 \subsection{Feature Importance: Envelope Thermal Memory}
 \label{ssec:importance}
 
-Permutation importance on the $T_\text{int}$ model at $h{+}1$\,h
-(Fig.~\ref{fig:importance}, $n=800$ held-out samples, 5 repeats)
-separates the predictors. Two variables dominate: the interior
-autoregressive lag at 15\,min ($0.394 \pm 0.035$ decrease in $R^2$) and
-the \emph{6-hour rolling mean} of exterior temperature
-($0.364 \pm 0.035$). No other feature reaches a tenth of these values;
-the third, the hour-of-day sine encoding, contributes $0.076$.
+Permutation importance is computed on the increment model of
+$T_\text{int}$ at $h{+}1$\,h, with the hyperparameters of
+Section~\ref{ssec:model} and squared loss: a model is fitted on the
+training part of each walk-forward fold, each feature is permuted 5
+times on the test fold, and the decrease in $R^2$ of the increment is
+averaged over the four folds (Fig.~\ref{fig:importance}). The
+hour-of-day cosine leads ($0.92 \pm 0.61$ across folds), followed by
+exterior temperature six hours earlier ($0.16 \pm 0.29$) and the
+hour-of-day sine ($0.044$); no other feature exceeds $0.02$.
 
-The informative comparison is within the exterior-temperature family
-itself. Instantaneous $T_\text{ext}$ ranks fifth at $0.017$, and the
-1-hour rolling mean seventh at $0.016$: the 6-hour mean is
-${\approx}22\times$ more important than the instantaneous value and
-${\approx}23\times$ more than the 1-hour mean. Point lags of
-$T_\text{ext}$ at 1\,h and 2\,h carry no positive importance at all.
-The model therefore does not respond to outdoor temperature at any
-single past instant, but to its integral over roughly six hours.
+The folds separate the two regimes. On the first test fold, whose
+samples come mostly from the rainy window, exterior temperature six
+hours earlier leads at $0.60$, about nine times the hour-of-day cosine;
+on the three dry-season folds the hour-of-day cosine leads, at $0.91$
+to $1.39$. Within the exterior-temperature family, the 6-hour lag is
+followed at a distance by the 1-hour rolling standard deviation
+($0.017$), the 6-hour rolling standard deviation ($0.008$) and the
+6-hour rolling mean ($0.007$); the instantaneous value ranks eleventh
+at $0.005$.
 
-This is a data-driven measurement of the envelope's thermal memory. It
-converges with the damping ratio and peak lag of
-Section~\ref{ssec:thermal}, and puts a time constant of several hours
-on the low-pass filter they describe, without physical supervision. A
-reduced-order model of such an envelope needs a multi-hour aggregate of
-outdoor temperature, not the current reading.
+A six-hour scale is consistent with the low-pass response described by
+the damping ratio and peak lag of Section~\ref{ssec:thermal}, and it is
+recovered without physical supervision. On a regular diurnal cycle,
+however, exterior temperature six hours earlier also tracks the time of
+day, so this lag and the hour-of-day encoding share part of their
+information; the hour-of-day cosine takes the lead on the dry-season
+folds, where diurnal amplitudes are largest. A reduced-order model of
+such an envelope needs outdoor temperature over the previous hours, not
+only the current reading.
 
 Permutation importance is unreliable when predictors are correlated, so
-the ranking was checked two further ways. \textit{Ablation} confirms
-it. Dropping the single 6-hour rolling mean costs $+7.9\,\%$ MAE, more
-than dropping all fourteen Open-Meteo variables together ($+6.3\,\%$),
-and no other individual feature is that expensive; removing the
-temporal cycles costs $+10.0\,\%$. \textit{Within-regime} analysis
-addresses the concern that a variable separating the two windows could
-rank high merely as a season indicator: recomputing the ranking inside
-each block leaves 6-hour-scale exterior temperature dominant, the
-6-hour \emph{lag} leading by a factor of five in the rainy block.
+the ranking was checked two further ways. \textit{Ablation} refits the
+model without a group of features and gives the 6-hour rolling mean of
+exterior temperature more weight than permutation does: dropping it
+alone costs $+7.9\,\%$ MAE, more than dropping all fourteen Open-Meteo
+variables together ($+6.3\,\%$), and removing the temporal cycles costs
+$+10.0\,\%$. \textit{Within-regime} analysis addresses the concern that
+a variable separating the two windows could rank high merely as a season
+indicator: recomputed inside each block, the ranking reproduces the
+pattern of the folds, the 6-hour \emph{lag} leading the rainy block by a
+factor of five and the hour-of-day cycle leading the eight-day dry
+block.
 
 The same tests temper the negative result on moisture. Exterior
-dew-point ranks 20th of 36 pooled, yet \emph{improves} to 6th within
+dew-point ranks 16th of 36 over the folds, yet \emph{improves} to 6th within
 the rainy block, the opposite of what a season proxy would do, and
 removing the five moisture variables costs $+3.4\,\%$ MAE. The
 contribution is small but not null, where hygroscopic coupling would
@@ -626,14 +669,15 @@ completeness, the rainy season at 24\,\%) cannot be settled here.
   \centering
   %% Generated by pipeline_EDB_v2.py -> outputs/v2_importance_features.png
   \includegraphics[width=\columnwidth]{v2_importance_features}
-  \caption{Permutation importance (top-15 of 36 features) for
-    $T_\text{int}$ at $h{+}1$\,h, as the decrease in $R^2$ over 5
-    repeats on 800 held-out samples; bars show the standard deviation.
-    Colours: red = autoregressive; purple = exterior temperature;
-    green = Open-Meteo exogenous; orange = temporal cycles. The 6-hour
-    rolling mean (rank~2) is ${\approx}22\times$ more important than
-    the instantaneous value (rank~5). Exterior dew-point, not shown,
-    ranks 20th of 36.}
+  \caption{Permutation importance (top-15 of 36 features) of the
+    $T_\text{int}$ increment model at $h{+}1$\,h, as the decrease in
+    $R^2$ averaged over the four walk-forward test folds (5 repeats
+    each); bars show the standard deviation across folds. Colours: red =
+    autoregressive; purple = exterior temperature; green = Open-Meteo
+    exogenous; orange = temporal cycles. Exterior temperature six hours
+    earlier (rank~2) leads the rainy-season fold and the hour-of-day
+    cosine (rank~1) the three dry-season folds. Exterior dew-point, not
+    shown, ranks 16th of 36.}
   \label{fig:importance}
 \end{figure}
 
@@ -699,12 +743,13 @@ the envelope thermal inertia: \sigrat $=0.54$, a median peak lag of
 $+1.75$\,h and a 52.5\,\% diurnal amplitude reduction. A
 HistGradientBoosting quantile model predicting increments reaches
 0.09\,\textdegree{}C MAE at 15\,min and 0.23\,\textdegree{}C at 1\,h,
-improving on persistence by 22.9\,\% and 47.7\,\%. Permutation
-importance identifies the 6-hour rolling mean of exterior temperature
-as the dominant exogenous predictor, ${\approx}22\times$ the
-instantaneous value, which measures the envelope's thermal memory
-directly from data. Exterior moisture variables contribute only
-marginally.
+improving on persistence by 22.9\,\% and 47.7\,\%. Over the walk-forward
+folds, the hour-of-day cycle leads the permutation ranking and exterior
+temperature six hours earlier comes first among exterior predictors; in
+ablation, the 6-hour rolling mean of exterior temperature is worth
+7.9\,\% of MAE, which indicates a response of the envelope to outdoor
+conditions over several hours. Exterior moisture variables contribute
+only marginally.
 
 The pipeline is released at \repourl. Conformal calibration, multi-zone
 instrumentation and a documented envelope build-up are the next steps

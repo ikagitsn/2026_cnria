@@ -142,3 +142,15 @@ outputs/               created on first run, not versioned
 
 `run_all.py` executes the whole chain; `--only <key>` and
 `--skip <key>` select individual steps.
+
+## Copyright
+
+The manuscript source (`paper.tex`, `refs.bib`) is the accepted version of
+an article to be published by IEEE in the proceedings of CNRIA 2026.
+
+© 2026 IEEE. Personal use of this material is permitted. Permission from
+IEEE must be obtained for all other uses, in any current or future media,
+including reprinting/republishing this material for advertising or
+promotional purposes, creating new collective works, for resale or
+redistribution to servers or lists, or reuse of any copyrighted component
+of this work in other works.
