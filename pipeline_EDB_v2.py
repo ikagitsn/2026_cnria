@@ -428,22 +428,34 @@ def main():
 
     if (4, "temp") in final_models:
         X, y = final_models[(4, "temp")]
-        cut = int(len(X) * 0.8)
-        m = HistGradientBoostingRegressor(
-            max_iter=N_ESTIMATORS, learning_rate=LEARNING_RATE,
-            max_depth=MAX_DEPTH, random_state=RANDOM_STATE,
-        )
-        m.fit(X.iloc[:cut], y.iloc[:cut])
-        n_sample = min(800, len(X) - cut)
-        idx = np.random.RandomState(RANDOM_STATE).choice(
-            np.arange(cut, len(X)), size=n_sample, replace=False)
-        pi = permutation_importance(m, X.iloc[idx], y.iloc[idx],
-                                    n_repeats=5, random_state=RANDOM_STATE, n_jobs=-1)
-        imp = pd.DataFrame({
+        # Importance is measured on the increment model, the formulation the
+        # forecasts use and the one ablation.py ranks within each regime:
+        # the target is y(t+h) - y(t), and a feature's importance is the
+        # drop in R^2 on that increment when the feature is permuted. It is
+        # computed on each walk-forward test fold and averaged over the
+        # folds, so that both seasons weigh in: a single final split would
+        # score only the last days of the dry window.
+        dy = y - X["temperature"]
+        fold_imp = {}
+        for fold, (tr_idx, te_idx) in enumerate(
+                TimeSeriesSplit(n_splits=CV_N_SPLITS).split(X)):
+            m = HistGradientBoostingRegressor(
+                max_iter=N_ESTIMATORS, learning_rate=LEARNING_RATE,
+                max_depth=MAX_DEPTH, random_state=RANDOM_STATE,
+            )
+            m.fit(X.iloc[tr_idx], dy.iloc[tr_idx])
+            pi = permutation_importance(m, X.iloc[te_idx], dy.iloc[te_idx],
+                                        n_repeats=5, random_state=RANDOM_STATE,
+                                        n_jobs=-1)
+            fold_imp[f"fold{fold}"] = pi.importances_mean
+        fold_imp = pd.DataFrame(fold_imp, index=X.columns)
+        # "std" is the spread across folds, drawn as error bars.
+        ranking = pd.DataFrame({
             "feature": X.columns,
-            "importance": pi.importances_mean,
-            "std": pi.importances_std,
-        }).sort_values("importance", ascending=False).head(15)
+            "importance": fold_imp.mean(axis=1).to_numpy(),
+            "std": fold_imp.std(axis=1).to_numpy(),
+            **{c: fold_imp[c].to_numpy() for c in fold_imp.columns},
+        }).sort_values("importance", ascending=False)
 
         def categorize(name):
             if name.startswith("temp_") or name.startswith("hr_lag"): return "Autoregressive"
@@ -453,7 +465,8 @@ def main():
             if name.startswith("hour_") or name.startswith("doy_") or name == "is_dry_season":
                 return "Temporal cycles"
             return "Other"
-        imp["cat"] = imp["feature"].apply(categorize)
+        ranking["cat"] = ranking["feature"].apply(categorize)
+        imp = ranking.head(15)
         color_map = {
             "Autoregressive": "#c0392b",
             "Exterior temperature": "#7f77dd",
@@ -467,7 +480,7 @@ def main():
         ax.barh(imp["feature"][::-1], imp["importance"][::-1],
                 xerr=imp["std"][::-1], color=colors[::-1], alpha=0.85)
         # No title: the caption in the paper carries it.
-        ax.set_xlabel("Decrease in $R^2$")
+        ax.set_xlabel("Decrease in $R^2$ of the increment")
         from matplotlib.patches import Patch
         handles = [Patch(facecolor=v, label=k) for k, v in color_map.items()
                    if k in imp["cat"].values]
@@ -475,7 +488,9 @@ def main():
         plt.tight_layout()
         plt.savefig(OUTPUT_DIR / "v2_importance_features.png", dpi=130)
         plt.close()
-        imp.to_csv(OUTPUT_DIR / "v2_importance_features.csv", index=False)
+        # All 36 features, so that the ranks the paper cites beyond the
+        # plotted top 15 can be checked.
+        ranking.to_csv(OUTPUT_DIR / "v2_importance_features.csv", index=False)
         print("   ok v2_importance_features.png")
 
     print(f"\nAll results written to: {OUTPUT_DIR}\n")

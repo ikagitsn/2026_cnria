@@ -15,6 +15,9 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+# Embed TrueType (Type 42) fonts instead of matplotlib's default Type 3:
+# IEEE camera-ready compliance checks flag Type 3 fonts.
+matplotlib.rcParams["pdf.fonttype"] = 42
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch

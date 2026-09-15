@@ -4,11 +4,12 @@ run_all.py — orchestrator for the full EDB chain
 Runs, in order, everything that produces the paper:
 
     1. consolidate_data.py    - merge the exports -> EDB_consolidated.csv
-    2. completeness.py        - completeness audit (Tables I and II)
-    3. pipeline_EDB_v2.py     - ML modelling (Table III, Fig. 4)
-    4. regen_pipeline.py      - architecture diagram (Fig. 1)
-    5. regen_heatmap.py       - calendar heatmap (Fig. 2)
-    6. regen_damping.py       - thermal signature (Fig. 3)
+    2. completeness.py        - completeness audit (Table I)
+    3. pipeline_EDB_v2.py     - ML modelling (Table II, Fig. 5)
+    4. regen_pipeline.py      - architecture diagram (Fig. 2)
+    5. regen_acquisition.py   - acquisition chain (Fig. 1)
+    6. regen_heatmap.py       - calendar heatmap (Fig. 3)
+    7. regen_damping.py       - thermal signature (Fig. 4)
 
 Standard usage:
     python run_all.py
@@ -16,7 +17,7 @@ Standard usage:
 Options :
     --skip consolidate         skip a step (keys: consolidate,
                                completeness, pipeline, fig_pipeline,
-                               fig_heatmap, fig_damping)
+                               fig_acquisition, fig_heatmap, fig_damping)
     --only pipeline            run ONLY the named step
     --stop-on-error            stop at the first failure
                                (default: carry on with the remaining steps)
@@ -67,7 +68,7 @@ STEPS = [
     {
         "key": "completeness",
         "script": "completeness.py",
-        "label": "Completeness audit (Tables I and II)",
+        "label": "Completeness audit (Table I)",
         "expected": [
             "outputs/completeness.csv",
             "outputs/completeness.tex",
@@ -77,7 +78,7 @@ STEPS = [
     {
         "key": "pipeline",
         "script": "pipeline_EDB_v2.py",
-        "label": "Predictive modelling (Table III, Fig. 4)",
+        "label": "Predictive modelling (Table II, Fig. 5)",
         "expected": [
             "outputs/resultats_v2_openmeteo.csv",
             "outputs/resultats_par_fold.csv",
@@ -88,21 +89,28 @@ STEPS = [
     {
         "key": "fig_pipeline",
         "script": "regen_pipeline.py",
-        "label": "Architecture diagram (Fig. 1)",
+        "label": "Architecture diagram (Fig. 2)",
         "expected": ["outputs/fig_pipeline.pdf"],
+        "in_root": False,
+    },
+    {
+        "key": "fig_acquisition",
+        "script": "regen_acquisition.py",
+        "label": "Acquisition chain (Fig. 1)",
+        "expected": ["outputs/fig_acquisition.pdf"],
         "in_root": False,
     },
     {
         "key": "fig_heatmap",
         "script": "regen_heatmap.py",
-        "label": "Calendar heatmap (Fig. 2)",
+        "label": "Calendar heatmap (Fig. 3)",
         "expected": ["outputs/heatmap_calendaire_broken.png"],
         "in_root": False,
     },
     {
         "key": "fig_damping",
         "script": "regen_damping.py",
-        "label": "Thermal signature (Fig. 3)",
+        "label": "Thermal signature (Fig. 4)",
         "expected": [
             "outputs/amortissement_CEB.png",
             "outputs/peak_lags.csv",
@@ -134,10 +142,10 @@ def banner():
     line = "═" * 67
     print()
     print(f"{C.BOLD}{C.CYAN}╔{line}╗{C.RESET}")
-    # Both fields below must be exactly 65 characters wide,
-    # otherwise the box border misaligns.
-    print(f"{C.BOLD}{C.CYAN}║{C.RESET}{C.BOLD}{'   ORCHESTRATOR - full EDB chain':<65}{C.CYAN}║{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}║{C.RESET}{C.DIM}{'   Hygrothermal pipeline - anonymised artefact':<65}{C.CYAN}║{C.RESET}")
+    # Both fields below must be exactly 67 characters wide, the length of
+    # the border line, otherwise the box border misaligns.
+    print(f"{C.BOLD}{C.CYAN}║{C.RESET}{C.BOLD}{'   ORCHESTRATOR - full EDB chain':<67}{C.CYAN}║{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}║{C.RESET}{C.DIM}{'   Hygrothermal pipeline - CNRIA 2026 artefact':<67}{C.CYAN}║{C.RESET}")
     print(f"{C.BOLD}{C.CYAN}╚{line}╝{C.RESET}")
     print()
 

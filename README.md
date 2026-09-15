@@ -36,12 +36,13 @@ Run from this directory, in any order — each script is independent.
 
 | Command | Produces | Used in |
 |---|---|---|
-| `python completeness.py` | `outputs/completeness.{csv,tex}`, `seasonal_summary.{csv,tex}` | Tables I and II, Sec. III-C and IV-A |
-| `python regen_pipeline.py` | `outputs/fig_pipeline.pdf` | Fig. 1 |
-| `python regen_heatmap.py` | `outputs/heatmap_calendaire_broken.png` | Fig. 2 |
-| `python regen_damping.py` | `outputs/amortissement_CEB.png`, `peak_lags.csv` | Fig. 3, Sec. IV-B |
-| `python pipeline_EDB_v2.py` | `outputs/v2_importance_features.png`, `resultats_v2_openmeteo.csv`, `resultats_par_fold.csv` | Fig. 4, Table III, Sec. IV-D and IV-E |
-| `python checks.py` | `outputs/gain_intervals.csv` | Sec. III-G and IV-D |
+| `python completeness.py` | `outputs/completeness.{csv,tex}`, `seasonal_summary.{csv,tex}` | Table I, Sec. III-B and IV-A |
+| `python regen_acquisition.py` | `outputs/fig_acquisition.pdf` | Fig. 1 |
+| `python regen_pipeline.py` | `outputs/fig_pipeline.pdf` | Fig. 2 |
+| `python regen_heatmap.py` | `outputs/heatmap_calendaire_broken.png` | Fig. 3 |
+| `python regen_damping.py` | `outputs/amortissement_CEB.png`, `peak_lags.csv` | Fig. 4, Sec. IV-B |
+| `python pipeline_EDB_v2.py` | `outputs/v2_importance_features.png`, `resultats_v2_openmeteo.csv`, `resultats_par_fold.csv` | Fig. 5, Table II, Sec. IV-D and IV-E |
+| `python checks.py` | `outputs/gain_intervals.csv` | Sec. III-F and IV-D |
 | `python ablation.py` | `outputs/ablation.csv`, `within_regime.csv` | Sec. IV-E |
 
 `pipeline_EDB_v2.py` is the only one that needs the network on first
@@ -51,8 +52,8 @@ both the level and the increment formulation.
 
 ### Rebuilding the PDF
 
-`paper.tex` and `refs.bib` are included. Run the five commands above
-first, so that `outputs/` holds the four figures, then:
+`paper.tex` and `refs.bib` are included. Run the eight commands above
+first, so that `outputs/` holds the five figures, then:
 
 ```
 pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper && pdflatex paper
@@ -115,7 +116,7 @@ to undo by accident downstream.
 
 `outputs/` and `data_cache/` are excluded on purpose (see `.gitignore`).
 Nothing is lost: every script recreates its own directory on start, and
-the five commands above regenerate all figures, tables and CSVs from the
+the eight commands above regenerate all figures, tables and CSVs from the
 two exports. `data_cache/` only holds a SQLite cache of Open-Meteo
 responses; the archive API is deterministic for past dates, so a rebuilt
 cache returns the same values.
@@ -129,9 +130,10 @@ completeness.py        data completeness audit
 pipeline_EDB_v2.py     features, models, walk-forward evaluation
 checks.py              leakage test and bootstrap intervals
 ablation.py            feature ablation and within-regime ranking
-regen_pipeline.py      Fig. 1
-regen_heatmap.py       Fig. 2
-regen_damping.py       Fig. 3
+regen_acquisition.py   Fig. 1
+regen_pipeline.py      Fig. 2
+regen_heatmap.py       Fig. 3
+regen_damping.py       Fig. 4
 common.py              shared palette and daily aggregation
 run_all.py             runs all of the above in order
 paper.tex, refs.bib    manuscript source
