@@ -1,7 +1,11 @@
 # Generated artefacts — every script recreates its own directory with
-# mkdir(exist_ok=True), so nothing here needs to be published. The five
+# mkdir(exist_ok=True), so nothing here needs to be published. The
 # commands in README.md regenerate all of it from the two CSV exports.
 outputs/
+
+# Merged exports, written next to the scripts by consolidate_data.py (the
+# first step of run_all.py) and read by no other script.
+EDB_consolidated.csv
 
 # SQLite cache of Open-Meteo responses. Rebuilt on first run; the
 # archive API is deterministic for past dates, so excluding it does not

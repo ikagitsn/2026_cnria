@@ -50,19 +50,6 @@ run. It takes a few minutes: it fits quantile models at three quantiles,
 for two targets, across four horizons and four walk-forward folds, in
 both the level and the increment formulation.
 
-### Rebuilding the PDF
-
-`paper.tex` and `refs.bib` are included. Run the eight commands above
-first, so that `outputs/` holds the five figures, then:
-
-```
-pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper && pdflatex paper
-```
-
-Four `pdflatex` passes are needed, not the usual three: `hyperref`
-requires one more before the citation labels settle. `\graphicspath`
-already looks inside `outputs/`, so no file needs moving.
-
 ### Headline numbers
 
 | Quantity | Value | Source |
@@ -114,6 +101,9 @@ to undo by accident downstream.
 
 ## What is not in this repository
 
+The article is not included; it will appear in the CNRIA 2026
+proceedings published by IEEE.
+
 `outputs/` and `data_cache/` are excluded on purpose (see `.gitignore`).
 Nothing is lost: every script recreates its own directory on start, and
 the eight commands above regenerate all figures, tables and CSVs from the
@@ -135,22 +125,11 @@ regen_pipeline.py      Fig. 2
 regen_heatmap.py       Fig. 3
 regen_damping.py       Fig. 4
 common.py              shared palette and daily aggregation
-run_all.py             runs all of the above in order
-paper.tex, refs.bib    manuscript source
+run_all.py             runs the chain, except checks.py and ablation.py
 outputs/               created on first run, not versioned
 ```
 
-`run_all.py` executes the whole chain; `--only <key>` and
-`--skip <key>` select individual steps.
-
-## Copyright
-
-The manuscript source (`paper.tex`, `refs.bib`) is the accepted version of
-an article to be published by IEEE in the proceedings of CNRIA 2026.
-
-© 2026 IEEE. Personal use of this material is permitted. Permission from
-IEEE must be obtained for all other uses, in any current or future media,
-including reprinting/republishing this material for advertising or
-promotional purposes, creating new collective works, for resale or
-redistribution to servers or lists, or reuse of any copyrighted component
-of this work in other works.
+`run_all.py` runs consolidation, the completeness audit, the models and
+the four figure scripts in turn; `--only <key>` and `--skip <key>`
+select individual steps. `checks.py` and `ablation.py` are run on their
+own.
